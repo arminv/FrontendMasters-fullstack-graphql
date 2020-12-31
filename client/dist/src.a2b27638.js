@@ -43692,34 +43692,3138 @@ var RenderPromises = function () {
 }();
 
 exports.RenderPromises = RenderPromises;
-},{"@apollo/react-common":"../node_modules/@apollo/react-common/lib/react-common.esm.js","tslib":"../node_modules/tslib/tslib.es6.js","react":"../node_modules/react/index.js","apollo-client":"../node_modules/apollo-client/bundle.esm.js","@wry/equality":"../node_modules/@wry/equality/lib/equality.esm.js","ts-invariant":"../node_modules/ts-invariant/lib/invariant.esm.js"}],"src/components/Header.js":[function(require,module,exports) {
+},{"@apollo/react-common":"../node_modules/@apollo/react-common/lib/react-common.esm.js","tslib":"../node_modules/tslib/tslib.es6.js","react":"../node_modules/react/index.js","apollo-client":"../node_modules/apollo-client/bundle.esm.js","@wry/equality":"../node_modules/@wry/equality/lib/equality.esm.js","ts-invariant":"../node_modules/ts-invariant/lib/invariant.esm.js"}],"../node_modules/apollo-cache/lib/bundle.esm.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = void 0;
+exports.Cache = exports.ApolloCache = void 0;
 
-var _react = _interopRequireDefault(require("react"));
+var _apolloUtilities = require("apollo-utilities");
 
-var _reactRouterDom = require("react-router-dom");
+function queryFromPojo(obj) {
+  var op = {
+    kind: 'OperationDefinition',
+    operation: 'query',
+    name: {
+      kind: 'Name',
+      value: 'GeneratedClientQuery'
+    },
+    selectionSet: selectionSetFromObj(obj)
+  };
+  var out = {
+    kind: 'Document',
+    definitions: [op]
+  };
+  return out;
+}
 
-var _reactRouter = require("react-router");
+function fragmentFromPojo(obj, typename) {
+  var frag = {
+    kind: 'FragmentDefinition',
+    typeCondition: {
+      kind: 'NamedType',
+      name: {
+        kind: 'Name',
+        value: typename || '__FakeType'
+      }
+    },
+    name: {
+      kind: 'Name',
+      value: 'GeneratedClientQuery'
+    },
+    selectionSet: selectionSetFromObj(obj)
+  };
+  var out = {
+    kind: 'Document',
+    definitions: [frag]
+  };
+  return out;
+}
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function selectionSetFromObj(obj) {
+  if (typeof obj === 'number' || typeof obj === 'boolean' || typeof obj === 'string' || typeof obj === 'undefined' || obj === null) {
+    return null;
+  }
 
-const Header = () => _react.default.createElement("header", null, _react.default.createElement("div", {
-  className: "row"
-}, _react.default.createElement("div", {
-  className: "col-xs"
-}, _react.default.createElement(_reactRouterDom.Link, {
-  to: "/"
-}, "Home"))));
+  if (Array.isArray(obj)) {
+    return selectionSetFromObj(obj[0]);
+  }
 
-var _default = (0, _reactRouter.withRouter)(Header);
+  var selections = [];
+  Object.keys(obj).forEach(function (key) {
+    var nestedSelSet = selectionSetFromObj(obj[key]);
+    var field = {
+      kind: 'Field',
+      name: {
+        kind: 'Name',
+        value: key
+      },
+      selectionSet: nestedSelSet || undefined
+    };
+    selections.push(field);
+  });
+  var selectionSet = {
+    kind: 'SelectionSet',
+    selections: selections
+  };
+  return selectionSet;
+}
 
-exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","react-router":"../node_modules/react-router/esm/react-router.js"}],"../node_modules/graphql/jsutils/devAssert.js":[function(require,module,exports) {
+var justTypenameQuery = {
+  kind: 'Document',
+  definitions: [{
+    kind: 'OperationDefinition',
+    operation: 'query',
+    name: null,
+    variableDefinitions: null,
+    directives: [],
+    selectionSet: {
+      kind: 'SelectionSet',
+      selections: [{
+        kind: 'Field',
+        alias: null,
+        name: {
+          kind: 'Name',
+          value: '__typename'
+        },
+        arguments: [],
+        directives: [],
+        selectionSet: null
+      }]
+    }
+  }]
+};
+
+var ApolloCache = function () {
+  function ApolloCache() {}
+
+  ApolloCache.prototype.transformDocument = function (document) {
+    return document;
+  };
+
+  ApolloCache.prototype.transformForLink = function (document) {
+    return document;
+  };
+
+  ApolloCache.prototype.readQuery = function (options, optimistic) {
+    if (optimistic === void 0) {
+      optimistic = false;
+    }
+
+    return this.read({
+      query: options.query,
+      variables: options.variables,
+      optimistic: optimistic
+    });
+  };
+
+  ApolloCache.prototype.readFragment = function (options, optimistic) {
+    if (optimistic === void 0) {
+      optimistic = false;
+    }
+
+    return this.read({
+      query: (0, _apolloUtilities.getFragmentQueryDocument)(options.fragment, options.fragmentName),
+      variables: options.variables,
+      rootId: options.id,
+      optimistic: optimistic
+    });
+  };
+
+  ApolloCache.prototype.writeQuery = function (options) {
+    this.write({
+      dataId: 'ROOT_QUERY',
+      result: options.data,
+      query: options.query,
+      variables: options.variables
+    });
+  };
+
+  ApolloCache.prototype.writeFragment = function (options) {
+    this.write({
+      dataId: options.id,
+      result: options.data,
+      variables: options.variables,
+      query: (0, _apolloUtilities.getFragmentQueryDocument)(options.fragment, options.fragmentName)
+    });
+  };
+
+  ApolloCache.prototype.writeData = function (_a) {
+    var id = _a.id,
+        data = _a.data;
+
+    if (typeof id !== 'undefined') {
+      var typenameResult = null;
+
+      try {
+        typenameResult = this.read({
+          rootId: id,
+          optimistic: false,
+          query: justTypenameQuery
+        });
+      } catch (e) {}
+
+      var __typename = typenameResult && typenameResult.__typename || '__ClientData';
+
+      var dataToWrite = Object.assign({
+        __typename: __typename
+      }, data);
+      this.writeFragment({
+        id: id,
+        fragment: fragmentFromPojo(dataToWrite, __typename),
+        data: dataToWrite
+      });
+    } else {
+      this.writeQuery({
+        query: queryFromPojo(data),
+        data: data
+      });
+    }
+  };
+
+  return ApolloCache;
+}();
+
+exports.ApolloCache = ApolloCache;
+var Cache;
+exports.Cache = Cache;
+
+(function (Cache) {})(Cache || (exports.Cache = Cache = {}));
+},{"apollo-utilities":"../node_modules/apollo-utilities/lib/bundle.esm.js"}],"../node_modules/@wry/context/lib/context.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.asyncFromGen = asyncFromGen;
+exports.setTimeout = setTimeoutWithContext;
+exports.wrapYieldingFiberMethods = wrapYieldingFiberMethods;
+exports.noContext = exports.bind = exports.Slot = void 0;
+// This currentContext variable will only be used if the makeSlotClass
+// function is called, which happens only if this is the first copy of the
+// @wry/context package to be imported.
+var currentContext = null; // This unique internal object is used to denote the absence of a value
+// for a given Slot, and is never exposed to outside code.
+
+var MISSING_VALUE = {};
+var idCounter = 1; // Although we can't do anything about the cost of duplicated code from
+// accidentally bundling multiple copies of the @wry/context package, we can
+// avoid creating the Slot class more than once using makeSlotClass.
+
+var makeSlotClass = function () {
+  return (
+    /** @class */
+    function () {
+      function Slot() {
+        // If you have a Slot object, you can find out its slot.id, but you cannot
+        // guess the slot.id of a Slot you don't have access to, thanks to the
+        // randomized suffix.
+        this.id = ["slot", idCounter++, Date.now(), Math.random().toString(36).slice(2)].join(":");
+      }
+
+      Slot.prototype.hasValue = function () {
+        for (var context_1 = currentContext; context_1; context_1 = context_1.parent) {
+          // We use the Slot object iself as a key to its value, which means the
+          // value cannot be obtained without a reference to the Slot object.
+          if (this.id in context_1.slots) {
+            var value = context_1.slots[this.id];
+            if (value === MISSING_VALUE) break;
+
+            if (context_1 !== currentContext) {
+              // Cache the value in currentContext.slots so the next lookup will
+              // be faster. This caching is safe because the tree of contexts and
+              // the values of the slots are logically immutable.
+              currentContext.slots[this.id] = value;
+            }
+
+            return true;
+          }
+        }
+
+        if (currentContext) {
+          // If a value was not found for this Slot, it's never going to be found
+          // no matter how many times we look it up, so we might as well cache
+          // the absence of the value, too.
+          currentContext.slots[this.id] = MISSING_VALUE;
+        }
+
+        return false;
+      };
+
+      Slot.prototype.getValue = function () {
+        if (this.hasValue()) {
+          return currentContext.slots[this.id];
+        }
+      };
+
+      Slot.prototype.withValue = function (value, callback, // Given the prevalence of arrow functions, specifying arguments is likely
+      // to be much more common than specifying `this`, hence this ordering:
+      args, thisArg) {
+        var _a;
+
+        var slots = (_a = {
+          __proto__: null
+        }, _a[this.id] = value, _a);
+        var parent = currentContext;
+        currentContext = {
+          parent: parent,
+          slots: slots
+        };
+
+        try {
+          // Function.prototype.apply allows the arguments array argument to be
+          // omitted or undefined, so args! is fine here.
+          return callback.apply(thisArg, args);
+        } finally {
+          currentContext = parent;
+        }
+      }; // Capture the current context and wrap a callback function so that it
+      // reestablishes the captured context when called.
+
+
+      Slot.bind = function (callback) {
+        var context = currentContext;
+        return function () {
+          var saved = currentContext;
+
+          try {
+            currentContext = context;
+            return callback.apply(this, arguments);
+          } finally {
+            currentContext = saved;
+          }
+        };
+      }; // Immediately run a callback function without any captured context.
+
+
+      Slot.noContext = function (callback, // Given the prevalence of arrow functions, specifying arguments is likely
+      // to be much more common than specifying `this`, hence this ordering:
+      args, thisArg) {
+        if (currentContext) {
+          var saved = currentContext;
+
+          try {
+            currentContext = null; // Function.prototype.apply allows the arguments array argument to be
+            // omitted or undefined, so args! is fine here.
+
+            return callback.apply(thisArg, args);
+          } finally {
+            currentContext = saved;
+          }
+        } else {
+          return callback.apply(thisArg, args);
+        }
+      };
+
+      return Slot;
+    }()
+  );
+}; // We store a single global implementation of the Slot class as a permanent
+// non-enumerable symbol property of the Array constructor. This obfuscation
+// does nothing to prevent access to the Slot class, but at least it ensures
+// the implementation (i.e. currentContext) cannot be tampered with, and all
+// copies of the @wry/context package (hopefully just one) will share the
+// same Slot implementation. Since the first copy of the @wry/context package
+// to be imported wins, this technique imposes a very high cost for any
+// future breaking changes to the Slot class.
+
+
+var globalKey = "@wry/context:Slot";
+var host = Array;
+
+var Slot = host[globalKey] || function () {
+  var Slot = makeSlotClass();
+
+  try {
+    Object.defineProperty(host, globalKey, {
+      value: host[globalKey] = Slot,
+      enumerable: false,
+      writable: false,
+      configurable: false
+    });
+  } finally {
+    return Slot;
+  }
+}();
+
+exports.Slot = Slot;
+var bind = Slot.bind,
+    noContext = Slot.noContext;
+exports.noContext = noContext;
+exports.bind = bind;
+
+function setTimeoutWithContext(callback, delay) {
+  return setTimeout(bind(callback), delay);
+} // Turn any generator function into an async function (using yield instead
+// of await), with context automatically preserved across yields.
+
+
+function asyncFromGen(genFn) {
+  return function () {
+    var gen = genFn.apply(this, arguments);
+    var boundNext = bind(gen.next);
+    var boundThrow = bind(gen.throw);
+    return new Promise(function (resolve, reject) {
+      function invoke(method, argument) {
+        try {
+          var result = method.call(gen, argument);
+        } catch (error) {
+          return reject(error);
+        }
+
+        var next = result.done ? resolve : invokeNext;
+
+        if (isPromiseLike(result.value)) {
+          result.value.then(next, result.done ? reject : invokeThrow);
+        } else {
+          next(result.value);
+        }
+      }
+
+      var invokeNext = function (value) {
+        return invoke(boundNext, value);
+      };
+
+      var invokeThrow = function (error) {
+        return invoke(boundThrow, error);
+      };
+
+      invokeNext();
+    });
+  };
+}
+
+function isPromiseLike(value) {
+  return value && typeof value.then === "function";
+} // If you use the fibers npm package to implement coroutines in Node.js,
+// you should call this function at least once to ensure context management
+// remains coherent across any yields.
+
+
+var wrappedFibers = [];
+
+function wrapYieldingFiberMethods(Fiber) {
+  // There can be only one implementation of Fiber per process, so this array
+  // should never grow longer than one element.
+  if (wrappedFibers.indexOf(Fiber) < 0) {
+    var wrap = function (obj, method) {
+      var fn = obj[method];
+
+      obj[method] = function () {
+        return noContext(fn, arguments, this);
+      };
+    }; // These methods can yield, according to
+    // https://github.com/laverdet/node-fibers/blob/ddebed9b8ae3883e57f822e2108e6943e5c8d2a8/fibers.js#L97-L100
+
+
+    wrap(Fiber, "yield");
+    wrap(Fiber.prototype, "run");
+    wrap(Fiber.prototype, "throwInto");
+    wrappedFibers.push(Fiber);
+  }
+
+  return Fiber;
+}
+},{}],"../node_modules/optimism/lib/bundle.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.defaultMakeCacheKey = defaultMakeCacheKey;
+exports.wrap = wrap;
+Object.defineProperty(exports, "asyncFromGen", {
+  enumerable: true,
+  get: function () {
+    return _context.asyncFromGen;
+  }
+});
+Object.defineProperty(exports, "bindContext", {
+  enumerable: true,
+  get: function () {
+    return _context.bind;
+  }
+});
+Object.defineProperty(exports, "noContext", {
+  enumerable: true,
+  get: function () {
+    return _context.noContext;
+  }
+});
+Object.defineProperty(exports, "setTimeout", {
+  enumerable: true,
+  get: function () {
+    return _context.setTimeout;
+  }
+});
+exports.KeyTrie = void 0;
+
+var _context = require("@wry/context");
+
+function defaultDispose() {}
+
+var Cache =
+/** @class */
+function () {
+  function Cache(max, dispose) {
+    if (max === void 0) {
+      max = Infinity;
+    }
+
+    if (dispose === void 0) {
+      dispose = defaultDispose;
+    }
+
+    this.max = max;
+    this.dispose = dispose;
+    this.map = new Map();
+    this.newest = null;
+    this.oldest = null;
+  }
+
+  Cache.prototype.has = function (key) {
+    return this.map.has(key);
+  };
+
+  Cache.prototype.get = function (key) {
+    var entry = this.getEntry(key);
+    return entry && entry.value;
+  };
+
+  Cache.prototype.getEntry = function (key) {
+    var entry = this.map.get(key);
+
+    if (entry && entry !== this.newest) {
+      var older = entry.older,
+          newer = entry.newer;
+
+      if (newer) {
+        newer.older = older;
+      }
+
+      if (older) {
+        older.newer = newer;
+      }
+
+      entry.older = this.newest;
+      entry.older.newer = entry;
+      entry.newer = null;
+      this.newest = entry;
+
+      if (entry === this.oldest) {
+        this.oldest = newer;
+      }
+    }
+
+    return entry;
+  };
+
+  Cache.prototype.set = function (key, value) {
+    var entry = this.getEntry(key);
+
+    if (entry) {
+      return entry.value = value;
+    }
+
+    entry = {
+      key: key,
+      value: value,
+      newer: null,
+      older: this.newest
+    };
+
+    if (this.newest) {
+      this.newest.newer = entry;
+    }
+
+    this.newest = entry;
+    this.oldest = this.oldest || entry;
+    this.map.set(key, entry);
+    return entry.value;
+  };
+
+  Cache.prototype.clean = function () {
+    while (this.oldest && this.map.size > this.max) {
+      this.delete(this.oldest.key);
+    }
+  };
+
+  Cache.prototype.delete = function (key) {
+    var entry = this.map.get(key);
+
+    if (entry) {
+      if (entry === this.newest) {
+        this.newest = entry.older;
+      }
+
+      if (entry === this.oldest) {
+        this.oldest = entry.newer;
+      }
+
+      if (entry.newer) {
+        entry.newer.older = entry.older;
+      }
+
+      if (entry.older) {
+        entry.older.newer = entry.newer;
+      }
+
+      this.map.delete(key);
+      this.dispose(entry.value, key);
+      return true;
+    }
+
+    return false;
+  };
+
+  return Cache;
+}();
+
+var parentEntrySlot = new _context.Slot();
+var reusableEmptyArray = [];
+var emptySetPool = [];
+var POOL_TARGET_SIZE = 100; // Since this package might be used browsers, we should avoid using the
+// Node built-in assert module.
+
+function assert(condition, optionalMessage) {
+  if (!condition) {
+    throw new Error(optionalMessage || "assertion failure");
+  }
+}
+
+function valueIs(a, b) {
+  var len = a.length;
+  return (// Unknown values are not equal to each other.
+    len > 0 && // Both values must be ordinary (or both exceptional) to be equal.
+    len === b.length && // The underlying value or exception must be the same.
+    a[len - 1] === b[len - 1]
+  );
+}
+
+function valueGet(value) {
+  switch (value.length) {
+    case 0:
+      throw new Error("unknown value");
+
+    case 1:
+      return value[0];
+
+    case 2:
+      throw value[1];
+  }
+}
+
+function valueCopy(value) {
+  return value.slice(0);
+}
+
+var Entry =
+/** @class */
+function () {
+  function Entry(fn, args) {
+    this.fn = fn;
+    this.args = args;
+    this.parents = new Set();
+    this.childValues = new Map(); // When this Entry has children that are dirty, this property becomes
+    // a Set containing other Entry objects, borrowed from emptySetPool.
+    // When the set becomes empty, it gets recycled back to emptySetPool.
+
+    this.dirtyChildren = null;
+    this.dirty = true;
+    this.recomputing = false;
+    this.value = [];
+    ++Entry.count;
+  } // This is the most important method of the Entry API, because it
+  // determines whether the cached this.value can be returned immediately,
+  // or must be recomputed. The overall performance of the caching system
+  // depends on the truth of the following observations: (1) this.dirty is
+  // usually false, (2) this.dirtyChildren is usually null/empty, and thus
+  // (3) valueGet(this.value) is usually returned without recomputation.
+
+
+  Entry.prototype.recompute = function () {
+    assert(!this.recomputing, "already recomputing");
+
+    if (!rememberParent(this) && maybeReportOrphan(this)) {
+      // The recipient of the entry.reportOrphan callback decided to dispose
+      // of this orphan entry by calling entry.dispose(), so we don't need to
+      // (and should not) proceed with the recomputation.
+      return void 0;
+    }
+
+    return mightBeDirty(this) ? reallyRecompute(this) : valueGet(this.value);
+  };
+
+  Entry.prototype.setDirty = function () {
+    if (this.dirty) return;
+    this.dirty = true;
+    this.value.length = 0;
+    reportDirty(this); // We can go ahead and unsubscribe here, since any further dirty
+    // notifications we receive will be redundant, and unsubscribing may
+    // free up some resources, e.g. file watchers.
+
+    maybeUnsubscribe(this);
+  };
+
+  Entry.prototype.dispose = function () {
+    var _this = this;
+
+    forgetChildren(this).forEach(maybeReportOrphan);
+    maybeUnsubscribe(this); // Because this entry has been kicked out of the cache (in index.js),
+    // we've lost the ability to find out if/when this entry becomes dirty,
+    // whether that happens through a subscription, because of a direct call
+    // to entry.setDirty(), or because one of its children becomes dirty.
+    // Because of this loss of future information, we have to assume the
+    // worst (that this entry might have become dirty very soon), so we must
+    // immediately mark this entry's parents as dirty. Normally we could
+    // just call entry.setDirty() rather than calling parent.setDirty() for
+    // each parent, but that would leave this entry in parent.childValues
+    // and parent.dirtyChildren, which would prevent the child from being
+    // truly forgotten.
+
+    this.parents.forEach(function (parent) {
+      parent.setDirty();
+      forgetChild(parent, _this);
+    });
+  };
+
+  Entry.count = 0;
+  return Entry;
+}();
+
+function rememberParent(child) {
+  var parent = parentEntrySlot.getValue();
+
+  if (parent) {
+    child.parents.add(parent);
+
+    if (!parent.childValues.has(child)) {
+      parent.childValues.set(child, []);
+    }
+
+    if (mightBeDirty(child)) {
+      reportDirtyChild(parent, child);
+    } else {
+      reportCleanChild(parent, child);
+    }
+
+    return parent;
+  }
+}
+
+function reallyRecompute(entry) {
+  // Since this recomputation is likely to re-remember some of this
+  // entry's children, we forget our children here but do not call
+  // maybeReportOrphan until after the recomputation finishes.
+  var originalChildren = forgetChildren(entry); // Set entry as the parent entry while calling recomputeNewValue(entry).
+
+  parentEntrySlot.withValue(entry, recomputeNewValue, [entry]);
+
+  if (maybeSubscribe(entry)) {
+    // If we successfully recomputed entry.value and did not fail to
+    // (re)subscribe, then this Entry is no longer explicitly dirty.
+    setClean(entry);
+  } // Now that we've had a chance to re-remember any children that were
+  // involved in the recomputation, we can safely report any orphan
+  // children that remain.
+
+
+  originalChildren.forEach(maybeReportOrphan);
+  return valueGet(entry.value);
+}
+
+function recomputeNewValue(entry) {
+  entry.recomputing = true; // Set entry.value as unknown.
+
+  entry.value.length = 0;
+
+  try {
+    // If entry.fn succeeds, entry.value will become a normal Value.
+    entry.value[0] = entry.fn.apply(null, entry.args);
+  } catch (e) {
+    // If entry.fn throws, entry.value will become exceptional.
+    entry.value[1] = e;
+  } // Either way, this line is always reached.
+
+
+  entry.recomputing = false;
+}
+
+function mightBeDirty(entry) {
+  return entry.dirty || !!(entry.dirtyChildren && entry.dirtyChildren.size);
+}
+
+function setClean(entry) {
+  entry.dirty = false;
+
+  if (mightBeDirty(entry)) {
+    // This Entry may still have dirty children, in which case we can't
+    // let our parents know we're clean just yet.
+    return;
+  }
+
+  reportClean(entry);
+}
+
+function reportDirty(child) {
+  child.parents.forEach(function (parent) {
+    return reportDirtyChild(parent, child);
+  });
+}
+
+function reportClean(child) {
+  child.parents.forEach(function (parent) {
+    return reportCleanChild(parent, child);
+  });
+} // Let a parent Entry know that one of its children may be dirty.
+
+
+function reportDirtyChild(parent, child) {
+  // Must have called rememberParent(child) before calling
+  // reportDirtyChild(parent, child).
+  assert(parent.childValues.has(child));
+  assert(mightBeDirty(child));
+
+  if (!parent.dirtyChildren) {
+    parent.dirtyChildren = emptySetPool.pop() || new Set();
+  } else if (parent.dirtyChildren.has(child)) {
+    // If we already know this child is dirty, then we must have already
+    // informed our own parents that we are dirty, so we can terminate
+    // the recursion early.
+    return;
+  }
+
+  parent.dirtyChildren.add(child);
+  reportDirty(parent);
+} // Let a parent Entry know that one of its children is no longer dirty.
+
+
+function reportCleanChild(parent, child) {
+  // Must have called rememberChild(child) before calling
+  // reportCleanChild(parent, child).
+  assert(parent.childValues.has(child));
+  assert(!mightBeDirty(child));
+  var childValue = parent.childValues.get(child);
+
+  if (childValue.length === 0) {
+    parent.childValues.set(child, valueCopy(child.value));
+  } else if (!valueIs(childValue, child.value)) {
+    parent.setDirty();
+  }
+
+  removeDirtyChild(parent, child);
+
+  if (mightBeDirty(parent)) {
+    return;
+  }
+
+  reportClean(parent);
+}
+
+function removeDirtyChild(parent, child) {
+  var dc = parent.dirtyChildren;
+
+  if (dc) {
+    dc.delete(child);
+
+    if (dc.size === 0) {
+      if (emptySetPool.length < POOL_TARGET_SIZE) {
+        emptySetPool.push(dc);
+      }
+
+      parent.dirtyChildren = null;
+    }
+  }
+} // If the given entry has a reportOrphan method, and no remaining parents,
+// call entry.reportOrphan and return true iff it returns true. The
+// reportOrphan function should return true to indicate entry.dispose()
+// has been called, and the entry has been removed from any other caches
+// (see index.js for the only current example).
+
+
+function maybeReportOrphan(entry) {
+  return entry.parents.size === 0 && typeof entry.reportOrphan === "function" && entry.reportOrphan() === true;
+} // Removes all children from this entry and returns an array of the
+// removed children.
+
+
+function forgetChildren(parent) {
+  var children = reusableEmptyArray;
+
+  if (parent.childValues.size > 0) {
+    children = [];
+    parent.childValues.forEach(function (_value, child) {
+      forgetChild(parent, child);
+      children.push(child);
+    });
+  } // After we forget all our children, this.dirtyChildren must be empty
+  // and therefore must have been reset to null.
+
+
+  assert(parent.dirtyChildren === null);
+  return children;
+}
+
+function forgetChild(parent, child) {
+  child.parents.delete(parent);
+  parent.childValues.delete(child);
+  removeDirtyChild(parent, child);
+}
+
+function maybeSubscribe(entry) {
+  if (typeof entry.subscribe === "function") {
+    try {
+      maybeUnsubscribe(entry); // Prevent double subscriptions.
+
+      entry.unsubscribe = entry.subscribe.apply(null, entry.args);
+    } catch (e) {
+      // If this Entry has a subscribe function and it threw an exception
+      // (or an unsubscribe function it previously returned now throws),
+      // return false to indicate that we were not able to subscribe (or
+      // unsubscribe), and this Entry should remain dirty.
+      entry.setDirty();
+      return false;
+    }
+  } // Returning true indicates either that there was no entry.subscribe
+  // function or that it succeeded.
+
+
+  return true;
+}
+
+function maybeUnsubscribe(entry) {
+  var unsubscribe = entry.unsubscribe;
+
+  if (typeof unsubscribe === "function") {
+    entry.unsubscribe = void 0;
+    unsubscribe();
+  }
+} // A trie data structure that holds object keys weakly, yet can also hold
+// non-object keys, unlike the native `WeakMap`.
+
+
+var KeyTrie =
+/** @class */
+function () {
+  function KeyTrie(weakness) {
+    this.weakness = weakness;
+  }
+
+  KeyTrie.prototype.lookup = function () {
+    var array = [];
+
+    for (var _i = 0; _i < arguments.length; _i++) {
+      array[_i] = arguments[_i];
+    }
+
+    return this.lookupArray(array);
+  };
+
+  KeyTrie.prototype.lookupArray = function (array) {
+    var node = this;
+    array.forEach(function (key) {
+      return node = node.getChildTrie(key);
+    });
+    return node.data || (node.data = Object.create(null));
+  };
+
+  KeyTrie.prototype.getChildTrie = function (key) {
+    var map = this.weakness && isObjRef(key) ? this.weak || (this.weak = new WeakMap()) : this.strong || (this.strong = new Map());
+    var child = map.get(key);
+    if (!child) map.set(key, child = new KeyTrie(this.weakness));
+    return child;
+  };
+
+  return KeyTrie;
+}();
+
+exports.KeyTrie = KeyTrie;
+
+function isObjRef(value) {
+  switch (typeof value) {
+    case "object":
+      if (value === null) break;
+    // Fall through to return true...
+
+    case "function":
+      return true;
+  }
+
+  return false;
+} // The defaultMakeCacheKey function is remarkably powerful, because it gives
+// a unique object for any shallow-identical list of arguments. If you need
+// to implement a custom makeCacheKey function, you may find it helpful to
+// delegate the final work to defaultMakeCacheKey, which is why we export it
+// here. However, you may want to avoid defaultMakeCacheKey if your runtime
+// does not support WeakMap, or you have the ability to return a string key.
+// In those cases, just write your own custom makeCacheKey functions.
+
+
+var keyTrie = new KeyTrie(typeof WeakMap === "function");
+
+function defaultMakeCacheKey() {
+  var args = [];
+
+  for (var _i = 0; _i < arguments.length; _i++) {
+    args[_i] = arguments[_i];
+  }
+
+  return keyTrie.lookupArray(args);
+}
+
+var caches = new Set();
+
+function wrap(originalFunction, options) {
+  if (options === void 0) {
+    options = Object.create(null);
+  }
+
+  var cache = new Cache(options.max || Math.pow(2, 16), function (entry) {
+    return entry.dispose();
+  });
+  var disposable = !!options.disposable;
+  var makeCacheKey = options.makeCacheKey || defaultMakeCacheKey;
+
+  function optimistic() {
+    if (disposable && !parentEntrySlot.hasValue()) {
+      // If there's no current parent computation, and this wrapped
+      // function is disposable (meaning we don't care about entry.value,
+      // just dependency tracking), then we can short-cut everything else
+      // in this function, because entry.recompute() is going to recycle
+      // the entry object without recomputing anything, anyway.
+      return void 0;
+    }
+
+    var key = makeCacheKey.apply(null, arguments);
+
+    if (key === void 0) {
+      return originalFunction.apply(null, arguments);
+    }
+
+    var args = Array.prototype.slice.call(arguments);
+    var entry = cache.get(key);
+
+    if (entry) {
+      entry.args = args;
+    } else {
+      entry = new Entry(originalFunction, args);
+      cache.set(key, entry);
+      entry.subscribe = options.subscribe;
+
+      if (disposable) {
+        entry.reportOrphan = function () {
+          return cache.delete(key);
+        };
+      }
+    }
+
+    var value = entry.recompute(); // Move this entry to the front of the least-recently used queue,
+    // since we just finished computing its value.
+
+    cache.set(key, entry);
+    caches.add(cache); // Clean up any excess entries in the cache, but only if there is no
+    // active parent entry, meaning we're not in the middle of a larger
+    // computation that might be flummoxed by the cleaning.
+
+    if (!parentEntrySlot.hasValue()) {
+      caches.forEach(function (cache) {
+        return cache.clean();
+      });
+      caches.clear();
+    } // If options.disposable is truthy, the caller of wrap is telling us
+    // they don't care about the result of entry.recompute(), so we should
+    // avoid returning the value, so it won't be accidentally used.
+
+
+    return disposable ? void 0 : value;
+  }
+
+  optimistic.dirty = function () {
+    var key = makeCacheKey.apply(null, arguments);
+    var child = key !== void 0 && cache.get(key);
+
+    if (child) {
+      child.setDirty();
+    }
+  };
+
+  return optimistic;
+}
+},{"@wry/context":"../node_modules/@wry/context/lib/context.esm.js"}],"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.assertIdValue = assertIdValue;
+exports.defaultDataIdFromObject = defaultDataIdFromObject;
+exports.defaultNormalizedCacheFactory = defaultNormalizedCacheFactory$1;
+exports.enhanceErrorWithDocument = enhanceErrorWithDocument;
+exports.WriteError = exports.StoreWriter = exports.StoreReader = exports.ObjectCache = exports.IntrospectionFragmentMatcher = exports.InMemoryCache = exports.HeuristicFragmentMatcher = void 0;
+
+var _tslib = require("tslib");
+
+var _apolloCache = require("apollo-cache");
+
+var _apolloUtilities = require("apollo-utilities");
+
+var _optimism = require("optimism");
+
+var _tsInvariant = require("ts-invariant");
+
+var haveWarned = false;
+
+function shouldWarn() {
+  var answer = !haveWarned;
+
+  if (!(0, _apolloUtilities.isTest)()) {
+    haveWarned = true;
+  }
+
+  return answer;
+}
+
+var HeuristicFragmentMatcher = function () {
+  function HeuristicFragmentMatcher() {}
+
+  HeuristicFragmentMatcher.prototype.ensureReady = function () {
+    return Promise.resolve();
+  };
+
+  HeuristicFragmentMatcher.prototype.canBypassInit = function () {
+    return true;
+  };
+
+  HeuristicFragmentMatcher.prototype.match = function (idValue, typeCondition, context) {
+    var obj = context.store.get(idValue.id);
+    var isRootQuery = idValue.id === 'ROOT_QUERY';
+
+    if (!obj) {
+      return isRootQuery;
+    }
+
+    var _a = obj.__typename,
+        __typename = _a === void 0 ? isRootQuery && 'Query' : _a;
+
+    if (!__typename) {
+      if (shouldWarn()) {
+        "development" === "production" || _tsInvariant.invariant.warn("You're using fragments in your queries, but either don't have the addTypename:\n  true option set in Apollo Client, or you are trying to write a fragment to the store without the __typename.\n   Please turn on the addTypename option and include __typename when writing fragments so that Apollo Client\n   can accurately match fragments.");
+        "development" === "production" || _tsInvariant.invariant.warn('Could not find __typename on Fragment ', typeCondition, obj);
+        "development" === "production" || _tsInvariant.invariant.warn("DEPRECATION WARNING: using fragments without __typename is unsupported behavior " + "and will be removed in future versions of Apollo client. You should fix this and set addTypename to true now.");
+      }
+
+      return 'heuristic';
+    }
+
+    if (__typename === typeCondition) {
+      return true;
+    }
+
+    if (shouldWarn()) {
+      "development" === "production" || _tsInvariant.invariant.error('You are using the simple (heuristic) fragment matcher, but your ' + 'queries contain union or interface types. Apollo Client will not be ' + 'able to accurately map fragments. To make this error go away, use ' + 'the `IntrospectionFragmentMatcher` as described in the docs: ' + 'https://www.apollographql.com/docs/react/advanced/fragments.html#fragment-matcher');
+    }
+
+    return 'heuristic';
+  };
+
+  return HeuristicFragmentMatcher;
+}();
+
+exports.HeuristicFragmentMatcher = HeuristicFragmentMatcher;
+
+var IntrospectionFragmentMatcher = function () {
+  function IntrospectionFragmentMatcher(options) {
+    if (options && options.introspectionQueryResultData) {
+      this.possibleTypesMap = this.parseIntrospectionResult(options.introspectionQueryResultData);
+      this.isReady = true;
+    } else {
+      this.isReady = false;
+    }
+
+    this.match = this.match.bind(this);
+  }
+
+  IntrospectionFragmentMatcher.prototype.match = function (idValue, typeCondition, context) {
+    "development" === "production" ? (0, _tsInvariant.invariant)(this.isReady, 6) : (0, _tsInvariant.invariant)(this.isReady, 'FragmentMatcher.match() was called before FragmentMatcher.init()');
+    var obj = context.store.get(idValue.id);
+    var isRootQuery = idValue.id === 'ROOT_QUERY';
+
+    if (!obj) {
+      return isRootQuery;
+    }
+
+    var _a = obj.__typename,
+        __typename = _a === void 0 ? isRootQuery && 'Query' : _a;
+
+    "development" === "production" ? (0, _tsInvariant.invariant)(__typename, 7) : (0, _tsInvariant.invariant)(__typename, "Cannot match fragment because __typename property is missing: " + JSON.stringify(obj));
+
+    if (__typename === typeCondition) {
+      return true;
+    }
+
+    var implementingTypes = this.possibleTypesMap[typeCondition];
+
+    if (__typename && implementingTypes && implementingTypes.indexOf(__typename) > -1) {
+      return true;
+    }
+
+    return false;
+  };
+
+  IntrospectionFragmentMatcher.prototype.parseIntrospectionResult = function (introspectionResultData) {
+    var typeMap = {};
+
+    introspectionResultData.__schema.types.forEach(function (type) {
+      if (type.kind === 'UNION' || type.kind === 'INTERFACE') {
+        typeMap[type.name] = type.possibleTypes.map(function (implementingType) {
+          return implementingType.name;
+        });
+      }
+    });
+
+    return typeMap;
+  };
+
+  return IntrospectionFragmentMatcher;
+}();
+
+exports.IntrospectionFragmentMatcher = IntrospectionFragmentMatcher;
+var hasOwn = Object.prototype.hasOwnProperty;
+
+var DepTrackingCache = function () {
+  function DepTrackingCache(data) {
+    var _this = this;
+
+    if (data === void 0) {
+      data = Object.create(null);
+    }
+
+    this.data = data;
+    this.depend = (0, _optimism.wrap)(function (dataId) {
+      return _this.data[dataId];
+    }, {
+      disposable: true,
+      makeCacheKey: function (dataId) {
+        return dataId;
+      }
+    });
+  }
+
+  DepTrackingCache.prototype.toObject = function () {
+    return this.data;
+  };
+
+  DepTrackingCache.prototype.get = function (dataId) {
+    this.depend(dataId);
+    return this.data[dataId];
+  };
+
+  DepTrackingCache.prototype.set = function (dataId, value) {
+    var oldValue = this.data[dataId];
+
+    if (value !== oldValue) {
+      this.data[dataId] = value;
+      this.depend.dirty(dataId);
+    }
+  };
+
+  DepTrackingCache.prototype.delete = function (dataId) {
+    if (hasOwn.call(this.data, dataId)) {
+      delete this.data[dataId];
+      this.depend.dirty(dataId);
+    }
+  };
+
+  DepTrackingCache.prototype.clear = function () {
+    this.replace(null);
+  };
+
+  DepTrackingCache.prototype.replace = function (newData) {
+    var _this = this;
+
+    if (newData) {
+      Object.keys(newData).forEach(function (dataId) {
+        _this.set(dataId, newData[dataId]);
+      });
+      Object.keys(this.data).forEach(function (dataId) {
+        if (!hasOwn.call(newData, dataId)) {
+          _this.delete(dataId);
+        }
+      });
+    } else {
+      Object.keys(this.data).forEach(function (dataId) {
+        _this.delete(dataId);
+      });
+    }
+  };
+
+  return DepTrackingCache;
+}();
+
+function defaultNormalizedCacheFactory(seed) {
+  return new DepTrackingCache(seed);
+}
+
+var StoreReader = function () {
+  function StoreReader(_a) {
+    var _this = this;
+
+    var _b = _a === void 0 ? {} : _a,
+        _c = _b.cacheKeyRoot,
+        cacheKeyRoot = _c === void 0 ? new _optimism.KeyTrie(_apolloUtilities.canUseWeakMap) : _c,
+        _d = _b.freezeResults,
+        freezeResults = _d === void 0 ? false : _d;
+
+    var _e = this,
+        executeStoreQuery = _e.executeStoreQuery,
+        executeSelectionSet = _e.executeSelectionSet,
+        executeSubSelectedArray = _e.executeSubSelectedArray;
+
+    this.freezeResults = freezeResults;
+    this.executeStoreQuery = (0, _optimism.wrap)(function (options) {
+      return executeStoreQuery.call(_this, options);
+    }, {
+      makeCacheKey: function (_a) {
+        var query = _a.query,
+            rootValue = _a.rootValue,
+            contextValue = _a.contextValue,
+            variableValues = _a.variableValues,
+            fragmentMatcher = _a.fragmentMatcher;
+
+        if (contextValue.store instanceof DepTrackingCache) {
+          return cacheKeyRoot.lookup(contextValue.store, query, fragmentMatcher, JSON.stringify(variableValues), rootValue.id);
+        }
+      }
+    });
+    this.executeSelectionSet = (0, _optimism.wrap)(function (options) {
+      return executeSelectionSet.call(_this, options);
+    }, {
+      makeCacheKey: function (_a) {
+        var selectionSet = _a.selectionSet,
+            rootValue = _a.rootValue,
+            execContext = _a.execContext;
+
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return cacheKeyRoot.lookup(execContext.contextValue.store, selectionSet, execContext.fragmentMatcher, JSON.stringify(execContext.variableValues), rootValue.id);
+        }
+      }
+    });
+    this.executeSubSelectedArray = (0, _optimism.wrap)(function (options) {
+      return executeSubSelectedArray.call(_this, options);
+    }, {
+      makeCacheKey: function (_a) {
+        var field = _a.field,
+            array = _a.array,
+            execContext = _a.execContext;
+
+        if (execContext.contextValue.store instanceof DepTrackingCache) {
+          return cacheKeyRoot.lookup(execContext.contextValue.store, field, array, JSON.stringify(execContext.variableValues));
+        }
+      }
+    });
+  }
+
+  StoreReader.prototype.readQueryFromStore = function (options) {
+    return this.diffQueryAgainstStore((0, _tslib.__assign)({}, options, {
+      returnPartialData: false
+    })).result;
+  };
+
+  StoreReader.prototype.diffQueryAgainstStore = function (_a) {
+    var store = _a.store,
+        query = _a.query,
+        variables = _a.variables,
+        previousResult = _a.previousResult,
+        _b = _a.returnPartialData,
+        returnPartialData = _b === void 0 ? true : _b,
+        _c = _a.rootId,
+        rootId = _c === void 0 ? 'ROOT_QUERY' : _c,
+        fragmentMatcherFunction = _a.fragmentMatcherFunction,
+        config = _a.config;
+    var queryDefinition = (0, _apolloUtilities.getQueryDefinition)(query);
+    variables = (0, _apolloUtilities.assign)({}, (0, _apolloUtilities.getDefaultValues)(queryDefinition), variables);
+    var context = {
+      store: store,
+      dataIdFromObject: config && config.dataIdFromObject,
+      cacheRedirects: config && config.cacheRedirects || {}
+    };
+    var execResult = this.executeStoreQuery({
+      query: query,
+      rootValue: {
+        type: 'id',
+        id: rootId,
+        generated: true,
+        typename: 'Query'
+      },
+      contextValue: context,
+      variableValues: variables,
+      fragmentMatcher: fragmentMatcherFunction
+    });
+    var hasMissingFields = execResult.missing && execResult.missing.length > 0;
+
+    if (hasMissingFields && !returnPartialData) {
+      execResult.missing.forEach(function (info) {
+        if (info.tolerable) return;
+        throw "development" === "production" ? new _tsInvariant.InvariantError(8) : new _tsInvariant.InvariantError("Can't find field " + info.fieldName + " on object " + JSON.stringify(info.object, null, 2) + ".");
+      });
+    }
+
+    if (previousResult) {
+      if ((0, _apolloUtilities.isEqual)(previousResult, execResult.result)) {
+        execResult.result = previousResult;
+      }
+    }
+
+    return {
+      result: execResult.result,
+      complete: !hasMissingFields
+    };
+  };
+
+  StoreReader.prototype.executeStoreQuery = function (_a) {
+    var query = _a.query,
+        rootValue = _a.rootValue,
+        contextValue = _a.contextValue,
+        variableValues = _a.variableValues,
+        _b = _a.fragmentMatcher,
+        fragmentMatcher = _b === void 0 ? defaultFragmentMatcher : _b;
+    var mainDefinition = (0, _apolloUtilities.getMainDefinition)(query);
+    var fragments = (0, _apolloUtilities.getFragmentDefinitions)(query);
+    var fragmentMap = (0, _apolloUtilities.createFragmentMap)(fragments);
+    var execContext = {
+      query: query,
+      fragmentMap: fragmentMap,
+      contextValue: contextValue,
+      variableValues: variableValues,
+      fragmentMatcher: fragmentMatcher
+    };
+    return this.executeSelectionSet({
+      selectionSet: mainDefinition.selectionSet,
+      rootValue: rootValue,
+      execContext: execContext
+    });
+  };
+
+  StoreReader.prototype.executeSelectionSet = function (_a) {
+    var _this = this;
+
+    var selectionSet = _a.selectionSet,
+        rootValue = _a.rootValue,
+        execContext = _a.execContext;
+    var fragmentMap = execContext.fragmentMap,
+        contextValue = execContext.contextValue,
+        variables = execContext.variableValues;
+    var finalResult = {
+      result: null
+    };
+    var objectsToMerge = [];
+    var object = contextValue.store.get(rootValue.id);
+    var typename = object && object.__typename || rootValue.id === 'ROOT_QUERY' && 'Query' || void 0;
+
+    function handleMissing(result) {
+      var _a;
+
+      if (result.missing) {
+        finalResult.missing = finalResult.missing || [];
+
+        (_a = finalResult.missing).push.apply(_a, result.missing);
+      }
+
+      return result.result;
+    }
+
+    selectionSet.selections.forEach(function (selection) {
+      var _a;
+
+      if (!(0, _apolloUtilities.shouldInclude)(selection, variables)) {
+        return;
+      }
+
+      if ((0, _apolloUtilities.isField)(selection)) {
+        var fieldResult = handleMissing(_this.executeField(object, typename, selection, execContext));
+
+        if (typeof fieldResult !== 'undefined') {
+          objectsToMerge.push((_a = {}, _a[(0, _apolloUtilities.resultKeyNameFromField)(selection)] = fieldResult, _a));
+        }
+      } else {
+        var fragment = void 0;
+
+        if ((0, _apolloUtilities.isInlineFragment)(selection)) {
+          fragment = selection;
+        } else {
+          fragment = fragmentMap[selection.name.value];
+
+          if (!fragment) {
+            throw "development" === "production" ? new _tsInvariant.InvariantError(9) : new _tsInvariant.InvariantError("No fragment named " + selection.name.value);
+          }
+        }
+
+        var typeCondition = fragment.typeCondition && fragment.typeCondition.name.value;
+        var match = !typeCondition || execContext.fragmentMatcher(rootValue, typeCondition, contextValue);
+
+        if (match) {
+          var fragmentExecResult = _this.executeSelectionSet({
+            selectionSet: fragment.selectionSet,
+            rootValue: rootValue,
+            execContext: execContext
+          });
+
+          if (match === 'heuristic' && fragmentExecResult.missing) {
+            fragmentExecResult = (0, _tslib.__assign)({}, fragmentExecResult, {
+              missing: fragmentExecResult.missing.map(function (info) {
+                return (0, _tslib.__assign)({}, info, {
+                  tolerable: true
+                });
+              })
+            });
+          }
+
+          objectsToMerge.push(handleMissing(fragmentExecResult));
+        }
+      }
+    });
+    finalResult.result = (0, _apolloUtilities.mergeDeepArray)(objectsToMerge);
+
+    if (this.freezeResults && "development" !== 'production') {
+      Object.freeze(finalResult.result);
+    }
+
+    return finalResult;
+  };
+
+  StoreReader.prototype.executeField = function (object, typename, field, execContext) {
+    var variables = execContext.variableValues,
+        contextValue = execContext.contextValue;
+    var fieldName = field.name.value;
+    var args = (0, _apolloUtilities.argumentsObjectFromField)(field, variables);
+    var info = {
+      resultKey: (0, _apolloUtilities.resultKeyNameFromField)(field),
+      directives: (0, _apolloUtilities.getDirectiveInfoFromField)(field, variables)
+    };
+    var readStoreResult = readStoreResolver(object, typename, fieldName, args, contextValue, info);
+
+    if (Array.isArray(readStoreResult.result)) {
+      return this.combineExecResults(readStoreResult, this.executeSubSelectedArray({
+        field: field,
+        array: readStoreResult.result,
+        execContext: execContext
+      }));
+    }
+
+    if (!field.selectionSet) {
+      assertSelectionSetForIdValue(field, readStoreResult.result);
+
+      if (this.freezeResults && "development" !== 'production') {
+        (0, _apolloUtilities.maybeDeepFreeze)(readStoreResult);
+      }
+
+      return readStoreResult;
+    }
+
+    if (readStoreResult.result == null) {
+      return readStoreResult;
+    }
+
+    return this.combineExecResults(readStoreResult, this.executeSelectionSet({
+      selectionSet: field.selectionSet,
+      rootValue: readStoreResult.result,
+      execContext: execContext
+    }));
+  };
+
+  StoreReader.prototype.combineExecResults = function () {
+    var execResults = [];
+
+    for (var _i = 0; _i < arguments.length; _i++) {
+      execResults[_i] = arguments[_i];
+    }
+
+    var missing;
+    execResults.forEach(function (execResult) {
+      if (execResult.missing) {
+        missing = missing || [];
+        missing.push.apply(missing, execResult.missing);
+      }
+    });
+    return {
+      result: execResults.pop().result,
+      missing: missing
+    };
+  };
+
+  StoreReader.prototype.executeSubSelectedArray = function (_a) {
+    var _this = this;
+
+    var field = _a.field,
+        array = _a.array,
+        execContext = _a.execContext;
+    var missing;
+
+    function handleMissing(childResult) {
+      if (childResult.missing) {
+        missing = missing || [];
+        missing.push.apply(missing, childResult.missing);
+      }
+
+      return childResult.result;
+    }
+
+    array = array.map(function (item) {
+      if (item === null) {
+        return null;
+      }
+
+      if (Array.isArray(item)) {
+        return handleMissing(_this.executeSubSelectedArray({
+          field: field,
+          array: item,
+          execContext: execContext
+        }));
+      }
+
+      if (field.selectionSet) {
+        return handleMissing(_this.executeSelectionSet({
+          selectionSet: field.selectionSet,
+          rootValue: item,
+          execContext: execContext
+        }));
+      }
+
+      assertSelectionSetForIdValue(field, item);
+      return item;
+    });
+
+    if (this.freezeResults && "development" !== 'production') {
+      Object.freeze(array);
+    }
+
+    return {
+      result: array,
+      missing: missing
+    };
+  };
+
+  return StoreReader;
+}();
+
+exports.StoreReader = StoreReader;
+
+function assertSelectionSetForIdValue(field, value) {
+  if (!field.selectionSet && (0, _apolloUtilities.isIdValue)(value)) {
+    throw "development" === "production" ? new _tsInvariant.InvariantError(10) : new _tsInvariant.InvariantError("Missing selection set for object of type " + value.typename + " returned for query field " + field.name.value);
+  }
+}
+
+function defaultFragmentMatcher() {
+  return true;
+}
+
+function assertIdValue(idValue) {
+  "development" === "production" ? (0, _tsInvariant.invariant)((0, _apolloUtilities.isIdValue)(idValue), 11) : (0, _tsInvariant.invariant)((0, _apolloUtilities.isIdValue)(idValue), "Encountered a sub-selection on the query, but the store doesn't have an object reference. This should never happen during normal use unless you have custom code that is directly manipulating the store; please file an issue.");
+}
+
+function readStoreResolver(object, typename, fieldName, args, context, _a) {
+  var resultKey = _a.resultKey,
+      directives = _a.directives;
+  var storeKeyName = fieldName;
+
+  if (args || directives) {
+    storeKeyName = (0, _apolloUtilities.getStoreKeyName)(storeKeyName, args, directives);
+  }
+
+  var fieldValue = void 0;
+
+  if (object) {
+    fieldValue = object[storeKeyName];
+
+    if (typeof fieldValue === 'undefined' && context.cacheRedirects && typeof typename === 'string') {
+      var type = context.cacheRedirects[typename];
+
+      if (type) {
+        var resolver = type[fieldName];
+
+        if (resolver) {
+          fieldValue = resolver(object, args, {
+            getCacheKey: function (storeObj) {
+              var id = context.dataIdFromObject(storeObj);
+              return id && (0, _apolloUtilities.toIdValue)({
+                id: id,
+                typename: storeObj.__typename
+              });
+            }
+          });
+        }
+      }
+    }
+  }
+
+  if (typeof fieldValue === 'undefined') {
+    return {
+      result: fieldValue,
+      missing: [{
+        object: object,
+        fieldName: storeKeyName,
+        tolerable: false
+      }]
+    };
+  }
+
+  if ((0, _apolloUtilities.isJsonValue)(fieldValue)) {
+    fieldValue = fieldValue.json;
+  }
+
+  return {
+    result: fieldValue
+  };
+}
+
+var ObjectCache = function () {
+  function ObjectCache(data) {
+    if (data === void 0) {
+      data = Object.create(null);
+    }
+
+    this.data = data;
+  }
+
+  ObjectCache.prototype.toObject = function () {
+    return this.data;
+  };
+
+  ObjectCache.prototype.get = function (dataId) {
+    return this.data[dataId];
+  };
+
+  ObjectCache.prototype.set = function (dataId, value) {
+    this.data[dataId] = value;
+  };
+
+  ObjectCache.prototype.delete = function (dataId) {
+    this.data[dataId] = void 0;
+  };
+
+  ObjectCache.prototype.clear = function () {
+    this.data = Object.create(null);
+  };
+
+  ObjectCache.prototype.replace = function (newData) {
+    this.data = newData || Object.create(null);
+  };
+
+  return ObjectCache;
+}();
+
+exports.ObjectCache = ObjectCache;
+
+function defaultNormalizedCacheFactory$1(seed) {
+  return new ObjectCache(seed);
+}
+
+var WriteError = function (_super) {
+  (0, _tslib.__extends)(WriteError, _super);
+
+  function WriteError() {
+    var _this = _super !== null && _super.apply(this, arguments) || this;
+
+    _this.type = 'WriteError';
+    return _this;
+  }
+
+  return WriteError;
+}(Error);
+
+exports.WriteError = WriteError;
+
+function enhanceErrorWithDocument(error, document) {
+  var enhancedError = new WriteError("Error writing result to store for query:\n " + JSON.stringify(document));
+  enhancedError.message += '\n' + error.message;
+  enhancedError.stack = error.stack;
+  return enhancedError;
+}
+
+var StoreWriter = function () {
+  function StoreWriter() {}
+
+  StoreWriter.prototype.writeQueryToStore = function (_a) {
+    var query = _a.query,
+        result = _a.result,
+        _b = _a.store,
+        store = _b === void 0 ? defaultNormalizedCacheFactory() : _b,
+        variables = _a.variables,
+        dataIdFromObject = _a.dataIdFromObject,
+        fragmentMatcherFunction = _a.fragmentMatcherFunction;
+    return this.writeResultToStore({
+      dataId: 'ROOT_QUERY',
+      result: result,
+      document: query,
+      store: store,
+      variables: variables,
+      dataIdFromObject: dataIdFromObject,
+      fragmentMatcherFunction: fragmentMatcherFunction
+    });
+  };
+
+  StoreWriter.prototype.writeResultToStore = function (_a) {
+    var dataId = _a.dataId,
+        result = _a.result,
+        document = _a.document,
+        _b = _a.store,
+        store = _b === void 0 ? defaultNormalizedCacheFactory() : _b,
+        variables = _a.variables,
+        dataIdFromObject = _a.dataIdFromObject,
+        fragmentMatcherFunction = _a.fragmentMatcherFunction;
+    var operationDefinition = (0, _apolloUtilities.getOperationDefinition)(document);
+
+    try {
+      return this.writeSelectionSetToStore({
+        result: result,
+        dataId: dataId,
+        selectionSet: operationDefinition.selectionSet,
+        context: {
+          store: store,
+          processedData: {},
+          variables: (0, _apolloUtilities.assign)({}, (0, _apolloUtilities.getDefaultValues)(operationDefinition), variables),
+          dataIdFromObject: dataIdFromObject,
+          fragmentMap: (0, _apolloUtilities.createFragmentMap)((0, _apolloUtilities.getFragmentDefinitions)(document)),
+          fragmentMatcherFunction: fragmentMatcherFunction
+        }
+      });
+    } catch (e) {
+      throw enhanceErrorWithDocument(e, document);
+    }
+  };
+
+  StoreWriter.prototype.writeSelectionSetToStore = function (_a) {
+    var _this = this;
+
+    var result = _a.result,
+        dataId = _a.dataId,
+        selectionSet = _a.selectionSet,
+        context = _a.context;
+    var variables = context.variables,
+        store = context.store,
+        fragmentMap = context.fragmentMap;
+    selectionSet.selections.forEach(function (selection) {
+      var _a;
+
+      if (!(0, _apolloUtilities.shouldInclude)(selection, variables)) {
+        return;
+      }
+
+      if ((0, _apolloUtilities.isField)(selection)) {
+        var resultFieldKey = (0, _apolloUtilities.resultKeyNameFromField)(selection);
+        var value = result[resultFieldKey];
+
+        if (typeof value !== 'undefined') {
+          _this.writeFieldToStore({
+            dataId: dataId,
+            value: value,
+            field: selection,
+            context: context
+          });
+        } else {
+          var isDefered = false;
+          var isClient = false;
+
+          if (selection.directives && selection.directives.length) {
+            isDefered = selection.directives.some(function (directive) {
+              return directive.name && directive.name.value === 'defer';
+            });
+            isClient = selection.directives.some(function (directive) {
+              return directive.name && directive.name.value === 'client';
+            });
+          }
+
+          if (!isDefered && !isClient && context.fragmentMatcherFunction) {
+            "development" === "production" || _tsInvariant.invariant.warn("Missing field " + resultFieldKey + " in " + JSON.stringify(result, null, 2).substring(0, 100));
+          }
+        }
+      } else {
+        var fragment = void 0;
+
+        if ((0, _apolloUtilities.isInlineFragment)(selection)) {
+          fragment = selection;
+        } else {
+          fragment = (fragmentMap || {})[selection.name.value];
+          "development" === "production" ? (0, _tsInvariant.invariant)(fragment, 2) : (0, _tsInvariant.invariant)(fragment, "No fragment named " + selection.name.value + ".");
+        }
+
+        var matches = true;
+
+        if (context.fragmentMatcherFunction && fragment.typeCondition) {
+          var id = dataId || 'self';
+          var idValue = (0, _apolloUtilities.toIdValue)({
+            id: id,
+            typename: undefined
+          });
+          var fakeContext = {
+            store: new ObjectCache((_a = {}, _a[id] = result, _a)),
+            cacheRedirects: {}
+          };
+          var match = context.fragmentMatcherFunction(idValue, fragment.typeCondition.name.value, fakeContext);
+
+          if (!(0, _apolloUtilities.isProduction)() && match === 'heuristic') {
+            "development" === "production" || _tsInvariant.invariant.error('WARNING: heuristic fragment matching going on!');
+          }
+
+          matches = !!match;
+        }
+
+        if (matches) {
+          _this.writeSelectionSetToStore({
+            result: result,
+            selectionSet: fragment.selectionSet,
+            dataId: dataId,
+            context: context
+          });
+        }
+      }
+    });
+    return store;
+  };
+
+  StoreWriter.prototype.writeFieldToStore = function (_a) {
+    var _b;
+
+    var field = _a.field,
+        value = _a.value,
+        dataId = _a.dataId,
+        context = _a.context;
+    var variables = context.variables,
+        dataIdFromObject = context.dataIdFromObject,
+        store = context.store;
+    var storeValue;
+    var storeObject;
+    var storeFieldName = (0, _apolloUtilities.storeKeyNameFromField)(field, variables);
+
+    if (!field.selectionSet || value === null) {
+      storeValue = value != null && typeof value === 'object' ? {
+        type: 'json',
+        json: value
+      } : value;
+    } else if (Array.isArray(value)) {
+      var generatedId = dataId + "." + storeFieldName;
+      storeValue = this.processArrayValue(value, generatedId, field.selectionSet, context);
+    } else {
+      var valueDataId = dataId + "." + storeFieldName;
+      var generated = true;
+
+      if (!isGeneratedId(valueDataId)) {
+        valueDataId = '$' + valueDataId;
+      }
+
+      if (dataIdFromObject) {
+        var semanticId = dataIdFromObject(value);
+        "development" === "production" ? (0, _tsInvariant.invariant)(!semanticId || !isGeneratedId(semanticId), 3) : (0, _tsInvariant.invariant)(!semanticId || !isGeneratedId(semanticId), 'IDs returned by dataIdFromObject cannot begin with the "$" character.');
+
+        if (semanticId || typeof semanticId === 'number' && semanticId === 0) {
+          valueDataId = semanticId;
+          generated = false;
+        }
+      }
+
+      if (!isDataProcessed(valueDataId, field, context.processedData)) {
+        this.writeSelectionSetToStore({
+          dataId: valueDataId,
+          result: value,
+          selectionSet: field.selectionSet,
+          context: context
+        });
+      }
+
+      var typename = value.__typename;
+      storeValue = (0, _apolloUtilities.toIdValue)({
+        id: valueDataId,
+        typename: typename
+      }, generated);
+      storeObject = store.get(dataId);
+      var escapedId = storeObject && storeObject[storeFieldName];
+
+      if (escapedId !== storeValue && (0, _apolloUtilities.isIdValue)(escapedId)) {
+        var hadTypename = escapedId.typename !== undefined;
+        var hasTypename = typename !== undefined;
+        var typenameChanged = hadTypename && hasTypename && escapedId.typename !== typename;
+        "development" === "production" ? (0, _tsInvariant.invariant)(!generated || escapedId.generated || typenameChanged, 4) : (0, _tsInvariant.invariant)(!generated || escapedId.generated || typenameChanged, "Store error: the application attempted to write an object with no provided id but the store already contains an id of " + escapedId.id + " for this object. The selectionSet that was trying to be written is:\n" + JSON.stringify(field));
+        "development" === "production" ? (0, _tsInvariant.invariant)(!hadTypename || hasTypename, 5) : (0, _tsInvariant.invariant)(!hadTypename || hasTypename, "Store error: the application attempted to write an object with no provided typename but the store already contains an object with typename of " + escapedId.typename + " for the object of id " + escapedId.id + ". The selectionSet that was trying to be written is:\n" + JSON.stringify(field));
+
+        if (escapedId.generated) {
+          if (typenameChanged) {
+            if (!generated) {
+              store.delete(escapedId.id);
+            }
+          } else {
+            mergeWithGenerated(escapedId.id, storeValue.id, store);
+          }
+        }
+      }
+    }
+
+    storeObject = store.get(dataId);
+
+    if (!storeObject || !(0, _apolloUtilities.isEqual)(storeValue, storeObject[storeFieldName])) {
+      store.set(dataId, (0, _tslib.__assign)({}, storeObject, (_b = {}, _b[storeFieldName] = storeValue, _b)));
+    }
+  };
+
+  StoreWriter.prototype.processArrayValue = function (value, generatedId, selectionSet, context) {
+    var _this = this;
+
+    return value.map(function (item, index) {
+      if (item === null) {
+        return null;
+      }
+
+      var itemDataId = generatedId + "." + index;
+
+      if (Array.isArray(item)) {
+        return _this.processArrayValue(item, itemDataId, selectionSet, context);
+      }
+
+      var generated = true;
+
+      if (context.dataIdFromObject) {
+        var semanticId = context.dataIdFromObject(item);
+
+        if (semanticId) {
+          itemDataId = semanticId;
+          generated = false;
+        }
+      }
+
+      if (!isDataProcessed(itemDataId, selectionSet, context.processedData)) {
+        _this.writeSelectionSetToStore({
+          dataId: itemDataId,
+          result: item,
+          selectionSet: selectionSet,
+          context: context
+        });
+      }
+
+      return (0, _apolloUtilities.toIdValue)({
+        id: itemDataId,
+        typename: item.__typename
+      }, generated);
+    });
+  };
+
+  return StoreWriter;
+}();
+
+exports.StoreWriter = StoreWriter;
+
+function isGeneratedId(id) {
+  return id[0] === '$';
+}
+
+function mergeWithGenerated(generatedKey, realKey, cache) {
+  if (generatedKey === realKey) {
+    return false;
+  }
+
+  var generated = cache.get(generatedKey);
+  var real = cache.get(realKey);
+  var madeChanges = false;
+  Object.keys(generated).forEach(function (key) {
+    var value = generated[key];
+    var realValue = real[key];
+
+    if ((0, _apolloUtilities.isIdValue)(value) && isGeneratedId(value.id) && (0, _apolloUtilities.isIdValue)(realValue) && !(0, _apolloUtilities.isEqual)(value, realValue) && mergeWithGenerated(value.id, realValue.id, cache)) {
+      madeChanges = true;
+    }
+  });
+  cache.delete(generatedKey);
+  var newRealValue = (0, _tslib.__assign)({}, generated, real);
+
+  if ((0, _apolloUtilities.isEqual)(newRealValue, real)) {
+    return madeChanges;
+  }
+
+  cache.set(realKey, newRealValue);
+  return true;
+}
+
+function isDataProcessed(dataId, field, processedData) {
+  if (!processedData) {
+    return false;
+  }
+
+  if (processedData[dataId]) {
+    if (processedData[dataId].indexOf(field) >= 0) {
+      return true;
+    } else {
+      processedData[dataId].push(field);
+    }
+  } else {
+    processedData[dataId] = [field];
+  }
+
+  return false;
+}
+
+var defaultConfig = {
+  fragmentMatcher: new HeuristicFragmentMatcher(),
+  dataIdFromObject: defaultDataIdFromObject,
+  addTypename: true,
+  resultCaching: true,
+  freezeResults: false
+};
+
+function defaultDataIdFromObject(result) {
+  if (result.__typename) {
+    if (result.id !== undefined) {
+      return result.__typename + ":" + result.id;
+    }
+
+    if (result._id !== undefined) {
+      return result.__typename + ":" + result._id;
+    }
+  }
+
+  return null;
+}
+
+var hasOwn$1 = Object.prototype.hasOwnProperty;
+
+var OptimisticCacheLayer = function (_super) {
+  (0, _tslib.__extends)(OptimisticCacheLayer, _super);
+
+  function OptimisticCacheLayer(optimisticId, parent, transaction) {
+    var _this = _super.call(this, Object.create(null)) || this;
+
+    _this.optimisticId = optimisticId;
+    _this.parent = parent;
+    _this.transaction = transaction;
+    return _this;
+  }
+
+  OptimisticCacheLayer.prototype.toObject = function () {
+    return (0, _tslib.__assign)({}, this.parent.toObject(), this.data);
+  };
+
+  OptimisticCacheLayer.prototype.get = function (dataId) {
+    return hasOwn$1.call(this.data, dataId) ? this.data[dataId] : this.parent.get(dataId);
+  };
+
+  return OptimisticCacheLayer;
+}(ObjectCache);
+
+var InMemoryCache = function (_super) {
+  (0, _tslib.__extends)(InMemoryCache, _super);
+
+  function InMemoryCache(config) {
+    if (config === void 0) {
+      config = {};
+    }
+
+    var _this = _super.call(this) || this;
+
+    _this.watches = new Set();
+    _this.typenameDocumentCache = new Map();
+    _this.cacheKeyRoot = new _optimism.KeyTrie(_apolloUtilities.canUseWeakMap);
+    _this.silenceBroadcast = false;
+    _this.config = (0, _tslib.__assign)({}, defaultConfig, config);
+
+    if (_this.config.customResolvers) {
+      "development" === "production" || _tsInvariant.invariant.warn('customResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating customResolvers in the next major version.');
+      _this.config.cacheRedirects = _this.config.customResolvers;
+    }
+
+    if (_this.config.cacheResolvers) {
+      "development" === "production" || _tsInvariant.invariant.warn('cacheResolvers have been renamed to cacheRedirects. Please update your config as we will be deprecating cacheResolvers in the next major version.');
+      _this.config.cacheRedirects = _this.config.cacheResolvers;
+    }
+
+    _this.addTypename = !!_this.config.addTypename;
+    _this.data = _this.config.resultCaching ? new DepTrackingCache() : new ObjectCache();
+    _this.optimisticData = _this.data;
+    _this.storeWriter = new StoreWriter();
+    _this.storeReader = new StoreReader({
+      cacheKeyRoot: _this.cacheKeyRoot,
+      freezeResults: config.freezeResults
+    });
+    var cache = _this;
+    var maybeBroadcastWatch = cache.maybeBroadcastWatch;
+    _this.maybeBroadcastWatch = (0, _optimism.wrap)(function (c) {
+      return maybeBroadcastWatch.call(_this, c);
+    }, {
+      makeCacheKey: function (c) {
+        if (c.optimistic) {
+          return;
+        }
+
+        if (c.previousResult) {
+          return;
+        }
+
+        if (cache.data instanceof DepTrackingCache) {
+          return cache.cacheKeyRoot.lookup(c.query, JSON.stringify(c.variables));
+        }
+      }
+    });
+    return _this;
+  }
+
+  InMemoryCache.prototype.restore = function (data) {
+    if (data) this.data.replace(data);
+    return this;
+  };
+
+  InMemoryCache.prototype.extract = function (optimistic) {
+    if (optimistic === void 0) {
+      optimistic = false;
+    }
+
+    return (optimistic ? this.optimisticData : this.data).toObject();
+  };
+
+  InMemoryCache.prototype.read = function (options) {
+    if (typeof options.rootId === 'string' && typeof this.data.get(options.rootId) === 'undefined') {
+      return null;
+    }
+
+    var fragmentMatcher = this.config.fragmentMatcher;
+    var fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+    return this.storeReader.readQueryFromStore({
+      store: options.optimistic ? this.optimisticData : this.data,
+      query: this.transformDocument(options.query),
+      variables: options.variables,
+      rootId: options.rootId,
+      fragmentMatcherFunction: fragmentMatcherFunction,
+      previousResult: options.previousResult,
+      config: this.config
+    }) || null;
+  };
+
+  InMemoryCache.prototype.write = function (write) {
+    var fragmentMatcher = this.config.fragmentMatcher;
+    var fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+    this.storeWriter.writeResultToStore({
+      dataId: write.dataId,
+      result: write.result,
+      variables: write.variables,
+      document: this.transformDocument(write.query),
+      store: this.data,
+      dataIdFromObject: this.config.dataIdFromObject,
+      fragmentMatcherFunction: fragmentMatcherFunction
+    });
+    this.broadcastWatches();
+  };
+
+  InMemoryCache.prototype.diff = function (query) {
+    var fragmentMatcher = this.config.fragmentMatcher;
+    var fragmentMatcherFunction = fragmentMatcher && fragmentMatcher.match;
+    return this.storeReader.diffQueryAgainstStore({
+      store: query.optimistic ? this.optimisticData : this.data,
+      query: this.transformDocument(query.query),
+      variables: query.variables,
+      returnPartialData: query.returnPartialData,
+      previousResult: query.previousResult,
+      fragmentMatcherFunction: fragmentMatcherFunction,
+      config: this.config
+    });
+  };
+
+  InMemoryCache.prototype.watch = function (watch) {
+    var _this = this;
+
+    this.watches.add(watch);
+    return function () {
+      _this.watches.delete(watch);
+    };
+  };
+
+  InMemoryCache.prototype.evict = function (query) {
+    throw "development" === "production" ? new _tsInvariant.InvariantError(1) : new _tsInvariant.InvariantError("eviction is not implemented on InMemory Cache");
+  };
+
+  InMemoryCache.prototype.reset = function () {
+    this.data.clear();
+    this.broadcastWatches();
+    return Promise.resolve();
+  };
+
+  InMemoryCache.prototype.removeOptimistic = function (idToRemove) {
+    var toReapply = [];
+    var removedCount = 0;
+    var layer = this.optimisticData;
+
+    while (layer instanceof OptimisticCacheLayer) {
+      if (layer.optimisticId === idToRemove) {
+        ++removedCount;
+      } else {
+        toReapply.push(layer);
+      }
+
+      layer = layer.parent;
+    }
+
+    if (removedCount > 0) {
+      this.optimisticData = layer;
+
+      while (toReapply.length > 0) {
+        var layer_1 = toReapply.pop();
+        this.performTransaction(layer_1.transaction, layer_1.optimisticId);
+      }
+
+      this.broadcastWatches();
+    }
+  };
+
+  InMemoryCache.prototype.performTransaction = function (transaction, optimisticId) {
+    var _a = this,
+        data = _a.data,
+        silenceBroadcast = _a.silenceBroadcast;
+
+    this.silenceBroadcast = true;
+
+    if (typeof optimisticId === 'string') {
+      this.data = this.optimisticData = new OptimisticCacheLayer(optimisticId, this.optimisticData, transaction);
+    }
+
+    try {
+      transaction(this);
+    } finally {
+      this.silenceBroadcast = silenceBroadcast;
+      this.data = data;
+    }
+
+    this.broadcastWatches();
+  };
+
+  InMemoryCache.prototype.recordOptimisticTransaction = function (transaction, id) {
+    return this.performTransaction(transaction, id);
+  };
+
+  InMemoryCache.prototype.transformDocument = function (document) {
+    if (this.addTypename) {
+      var result = this.typenameDocumentCache.get(document);
+
+      if (!result) {
+        result = (0, _apolloUtilities.addTypenameToDocument)(document);
+        this.typenameDocumentCache.set(document, result);
+        this.typenameDocumentCache.set(result, result);
+      }
+
+      return result;
+    }
+
+    return document;
+  };
+
+  InMemoryCache.prototype.broadcastWatches = function () {
+    var _this = this;
+
+    if (!this.silenceBroadcast) {
+      this.watches.forEach(function (c) {
+        return _this.maybeBroadcastWatch(c);
+      });
+    }
+  };
+
+  InMemoryCache.prototype.maybeBroadcastWatch = function (c) {
+    c.callback(this.diff({
+      query: c.query,
+      variables: c.variables,
+      previousResult: c.previousResult && c.previousResult(),
+      optimistic: c.optimistic
+    }));
+  };
+
+  return InMemoryCache;
+}(_apolloCache.ApolloCache);
+
+exports.InMemoryCache = InMemoryCache;
+},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-cache":"../node_modules/apollo-cache/lib/bundle.esm.js","apollo-utilities":"../node_modules/apollo-utilities/lib/bundle.esm.js","optimism":"../node_modules/optimism/lib/bundle.esm.js","ts-invariant":"../node_modules/ts-invariant/lib/invariant.esm.js"}],"../node_modules/graphql/language/blockString.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.dedentBlockStringValue = dedentBlockStringValue;
+exports.getBlockStringIndentation = getBlockStringIndentation;
+exports.printBlockString = printBlockString;
+/**
+ * Produces the value of a block string from its parsed raw value, similar to
+ * CoffeeScript's block string, Python's docstring trim or Ruby's strip_heredoc.
+ *
+ * This implements the GraphQL spec's BlockStringValue() static algorithm.
+ */
+
+function dedentBlockStringValue(rawString) {
+  // Expand a block string's raw value into independent lines.
+  var lines = rawString.split(/\r\n|[\n\r]/g); // Remove common indentation from all lines but first.
+
+  var commonIndent = getBlockStringIndentation(lines);
+
+  if (commonIndent !== 0) {
+    for (var i = 1; i < lines.length; i++) {
+      lines[i] = lines[i].slice(commonIndent);
+    }
+  } // Remove leading and trailing blank lines.
+
+
+  while (lines.length > 0 && isBlank(lines[0])) {
+    lines.shift();
+  }
+
+  while (lines.length > 0 && isBlank(lines[lines.length - 1])) {
+    lines.pop();
+  } // Return a string of the lines joined with U+000A.
+
+
+  return lines.join('\n');
+} // @internal
+
+
+function getBlockStringIndentation(lines) {
+  var commonIndent = null;
+
+  for (var i = 1; i < lines.length; i++) {
+    var line = lines[i];
+    var indent = leadingWhitespace(line);
+
+    if (indent === line.length) {
+      continue; // skip empty lines
+    }
+
+    if (commonIndent === null || indent < commonIndent) {
+      commonIndent = indent;
+
+      if (commonIndent === 0) {
+        break;
+      }
+    }
+  }
+
+  return commonIndent === null ? 0 : commonIndent;
+}
+
+function leadingWhitespace(str) {
+  var i = 0;
+
+  while (i < str.length && (str[i] === ' ' || str[i] === '\t')) {
+    i++;
+  }
+
+  return i;
+}
+
+function isBlank(str) {
+  return leadingWhitespace(str) === str.length;
+}
+/**
+ * Print a block string in the indented block form by adding a leading and
+ * trailing blank line. However, if a block string starts with whitespace and is
+ * a single-line, adding a leading blank line would strip that whitespace.
+ */
+
+
+function printBlockString(value) {
+  var indentation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+  var preferMultipleLines = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+  var isSingleLine = value.indexOf('\n') === -1;
+  var hasLeadingSpace = value[0] === ' ' || value[0] === '\t';
+  var hasTrailingQuote = value[value.length - 1] === '"';
+  var printAsMultipleLines = !isSingleLine || hasTrailingQuote || preferMultipleLines;
+  var result = ''; // Format a multi-line block quote to account for leading space.
+
+  if (printAsMultipleLines && !(isSingleLine && hasLeadingSpace)) {
+    result += '\n' + indentation;
+  }
+
+  result += indentation ? value.replace(/\n/g, '\n' + indentation) : value;
+
+  if (printAsMultipleLines) {
+    result += '\n';
+  }
+
+  return '"""' + result.replace(/"""/g, '\\"""') + '"""';
+}
+},{}],"../node_modules/graphql/language/printer.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.print = print;
+
+var _visitor = require("./visitor");
+
+var _blockString = require("./blockString");
+/**
+ * Converts an AST into a string, using one set of reasonable
+ * formatting rules.
+ */
+
+
+function print(ast) {
+  return (0, _visitor.visit)(ast, {
+    leave: printDocASTReducer
+  });
+} // TODO: provide better type coverage in future
+
+
+var printDocASTReducer = {
+  Name: function Name(node) {
+    return node.value;
+  },
+  Variable: function Variable(node) {
+    return '$' + node.name;
+  },
+  // Document
+  Document: function Document(node) {
+    return join(node.definitions, '\n\n') + '\n';
+  },
+  OperationDefinition: function OperationDefinition(node) {
+    var op = node.operation;
+    var name = node.name;
+    var varDefs = wrap('(', join(node.variableDefinitions, ', '), ')');
+    var directives = join(node.directives, ' ');
+    var selectionSet = node.selectionSet; // Anonymous queries with no directives or variable definitions can use
+    // the query short form.
+
+    return !name && !directives && !varDefs && op === 'query' ? selectionSet : join([op, join([name, varDefs]), directives, selectionSet], ' ');
+  },
+  VariableDefinition: function VariableDefinition(_ref) {
+    var variable = _ref.variable,
+        type = _ref.type,
+        defaultValue = _ref.defaultValue,
+        directives = _ref.directives;
+    return variable + ': ' + type + wrap(' = ', defaultValue) + wrap(' ', join(directives, ' '));
+  },
+  SelectionSet: function SelectionSet(_ref2) {
+    var selections = _ref2.selections;
+    return block(selections);
+  },
+  Field: function Field(_ref3) {
+    var alias = _ref3.alias,
+        name = _ref3.name,
+        args = _ref3.arguments,
+        directives = _ref3.directives,
+        selectionSet = _ref3.selectionSet;
+    return join([wrap('', alias, ': ') + name + wrap('(', join(args, ', '), ')'), join(directives, ' '), selectionSet], ' ');
+  },
+  Argument: function Argument(_ref4) {
+    var name = _ref4.name,
+        value = _ref4.value;
+    return name + ': ' + value;
+  },
+  // Fragments
+  FragmentSpread: function FragmentSpread(_ref5) {
+    var name = _ref5.name,
+        directives = _ref5.directives;
+    return '...' + name + wrap(' ', join(directives, ' '));
+  },
+  InlineFragment: function InlineFragment(_ref6) {
+    var typeCondition = _ref6.typeCondition,
+        directives = _ref6.directives,
+        selectionSet = _ref6.selectionSet;
+    return join(['...', wrap('on ', typeCondition), join(directives, ' '), selectionSet], ' ');
+  },
+  FragmentDefinition: function FragmentDefinition(_ref7) {
+    var name = _ref7.name,
+        typeCondition = _ref7.typeCondition,
+        variableDefinitions = _ref7.variableDefinitions,
+        directives = _ref7.directives,
+        selectionSet = _ref7.selectionSet;
+    return (// Note: fragment variable definitions are experimental and may be changed
+      // or removed in the future.
+      "fragment ".concat(name).concat(wrap('(', join(variableDefinitions, ', '), ')'), " ") + "on ".concat(typeCondition, " ").concat(wrap('', join(directives, ' '), ' ')) + selectionSet
+    );
+  },
+  // Value
+  IntValue: function IntValue(_ref8) {
+    var value = _ref8.value;
+    return value;
+  },
+  FloatValue: function FloatValue(_ref9) {
+    var value = _ref9.value;
+    return value;
+  },
+  StringValue: function StringValue(_ref10, key) {
+    var value = _ref10.value,
+        isBlockString = _ref10.block;
+    return isBlockString ? (0, _blockString.printBlockString)(value, key === 'description' ? '' : '  ') : JSON.stringify(value);
+  },
+  BooleanValue: function BooleanValue(_ref11) {
+    var value = _ref11.value;
+    return value ? 'true' : 'false';
+  },
+  NullValue: function NullValue() {
+    return 'null';
+  },
+  EnumValue: function EnumValue(_ref12) {
+    var value = _ref12.value;
+    return value;
+  },
+  ListValue: function ListValue(_ref13) {
+    var values = _ref13.values;
+    return '[' + join(values, ', ') + ']';
+  },
+  ObjectValue: function ObjectValue(_ref14) {
+    var fields = _ref14.fields;
+    return '{' + join(fields, ', ') + '}';
+  },
+  ObjectField: function ObjectField(_ref15) {
+    var name = _ref15.name,
+        value = _ref15.value;
+    return name + ': ' + value;
+  },
+  // Directive
+  Directive: function Directive(_ref16) {
+    var name = _ref16.name,
+        args = _ref16.arguments;
+    return '@' + name + wrap('(', join(args, ', '), ')');
+  },
+  // Type
+  NamedType: function NamedType(_ref17) {
+    var name = _ref17.name;
+    return name;
+  },
+  ListType: function ListType(_ref18) {
+    var type = _ref18.type;
+    return '[' + type + ']';
+  },
+  NonNullType: function NonNullType(_ref19) {
+    var type = _ref19.type;
+    return type + '!';
+  },
+  // Type System Definitions
+  SchemaDefinition: function SchemaDefinition(_ref20) {
+    var directives = _ref20.directives,
+        operationTypes = _ref20.operationTypes;
+    return join(['schema', join(directives, ' '), block(operationTypes)], ' ');
+  },
+  OperationTypeDefinition: function OperationTypeDefinition(_ref21) {
+    var operation = _ref21.operation,
+        type = _ref21.type;
+    return operation + ': ' + type;
+  },
+  ScalarTypeDefinition: addDescription(function (_ref22) {
+    var name = _ref22.name,
+        directives = _ref22.directives;
+    return join(['scalar', name, join(directives, ' ')], ' ');
+  }),
+  ObjectTypeDefinition: addDescription(function (_ref23) {
+    var name = _ref23.name,
+        interfaces = _ref23.interfaces,
+        directives = _ref23.directives,
+        fields = _ref23.fields;
+    return join(['type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)], ' ');
+  }),
+  FieldDefinition: addDescription(function (_ref24) {
+    var name = _ref24.name,
+        args = _ref24.arguments,
+        type = _ref24.type,
+        directives = _ref24.directives;
+    return name + (hasMultilineItems(args) ? wrap('(\n', indent(join(args, '\n')), '\n)') : wrap('(', join(args, ', '), ')')) + ': ' + type + wrap(' ', join(directives, ' '));
+  }),
+  InputValueDefinition: addDescription(function (_ref25) {
+    var name = _ref25.name,
+        type = _ref25.type,
+        defaultValue = _ref25.defaultValue,
+        directives = _ref25.directives;
+    return join([name + ': ' + type, wrap('= ', defaultValue), join(directives, ' ')], ' ');
+  }),
+  InterfaceTypeDefinition: addDescription(function (_ref26) {
+    var name = _ref26.name,
+        directives = _ref26.directives,
+        fields = _ref26.fields;
+    return join(['interface', name, join(directives, ' '), block(fields)], ' ');
+  }),
+  UnionTypeDefinition: addDescription(function (_ref27) {
+    var name = _ref27.name,
+        directives = _ref27.directives,
+        types = _ref27.types;
+    return join(['union', name, join(directives, ' '), types && types.length !== 0 ? '= ' + join(types, ' | ') : ''], ' ');
+  }),
+  EnumTypeDefinition: addDescription(function (_ref28) {
+    var name = _ref28.name,
+        directives = _ref28.directives,
+        values = _ref28.values;
+    return join(['enum', name, join(directives, ' '), block(values)], ' ');
+  }),
+  EnumValueDefinition: addDescription(function (_ref29) {
+    var name = _ref29.name,
+        directives = _ref29.directives;
+    return join([name, join(directives, ' ')], ' ');
+  }),
+  InputObjectTypeDefinition: addDescription(function (_ref30) {
+    var name = _ref30.name,
+        directives = _ref30.directives,
+        fields = _ref30.fields;
+    return join(['input', name, join(directives, ' '), block(fields)], ' ');
+  }),
+  DirectiveDefinition: addDescription(function (_ref31) {
+    var name = _ref31.name,
+        args = _ref31.arguments,
+        repeatable = _ref31.repeatable,
+        locations = _ref31.locations;
+    return 'directive @' + name + (hasMultilineItems(args) ? wrap('(\n', indent(join(args, '\n')), '\n)') : wrap('(', join(args, ', '), ')')) + (repeatable ? ' repeatable' : '') + ' on ' + join(locations, ' | ');
+  }),
+  SchemaExtension: function SchemaExtension(_ref32) {
+    var directives = _ref32.directives,
+        operationTypes = _ref32.operationTypes;
+    return join(['extend schema', join(directives, ' '), block(operationTypes)], ' ');
+  },
+  ScalarTypeExtension: function ScalarTypeExtension(_ref33) {
+    var name = _ref33.name,
+        directives = _ref33.directives;
+    return join(['extend scalar', name, join(directives, ' ')], ' ');
+  },
+  ObjectTypeExtension: function ObjectTypeExtension(_ref34) {
+    var name = _ref34.name,
+        interfaces = _ref34.interfaces,
+        directives = _ref34.directives,
+        fields = _ref34.fields;
+    return join(['extend type', name, wrap('implements ', join(interfaces, ' & ')), join(directives, ' '), block(fields)], ' ');
+  },
+  InterfaceTypeExtension: function InterfaceTypeExtension(_ref35) {
+    var name = _ref35.name,
+        directives = _ref35.directives,
+        fields = _ref35.fields;
+    return join(['extend interface', name, join(directives, ' '), block(fields)], ' ');
+  },
+  UnionTypeExtension: function UnionTypeExtension(_ref36) {
+    var name = _ref36.name,
+        directives = _ref36.directives,
+        types = _ref36.types;
+    return join(['extend union', name, join(directives, ' '), types && types.length !== 0 ? '= ' + join(types, ' | ') : ''], ' ');
+  },
+  EnumTypeExtension: function EnumTypeExtension(_ref37) {
+    var name = _ref37.name,
+        directives = _ref37.directives,
+        values = _ref37.values;
+    return join(['extend enum', name, join(directives, ' '), block(values)], ' ');
+  },
+  InputObjectTypeExtension: function InputObjectTypeExtension(_ref38) {
+    var name = _ref38.name,
+        directives = _ref38.directives,
+        fields = _ref38.fields;
+    return join(['extend input', name, join(directives, ' '), block(fields)], ' ');
+  }
+};
+
+function addDescription(cb) {
+  return function (node) {
+    return join([node.description, cb(node)], '\n');
+  };
+}
+/**
+ * Given maybeArray, print an empty string if it is null or empty, otherwise
+ * print all items together separated by separator if provided
+ */
+
+
+function join(maybeArray, separator) {
+  return maybeArray ? maybeArray.filter(function (x) {
+    return x;
+  }).join(separator || '') : '';
+}
+/**
+ * Given array, print each item on its own line, wrapped in an
+ * indented "{ }" block.
+ */
+
+
+function block(array) {
+  return array && array.length !== 0 ? '{\n' + indent(join(array, '\n')) + '\n}' : '';
+}
+/**
+ * If maybeString is not null or empty, then wrap with start and end, otherwise
+ * print an empty string.
+ */
+
+
+function wrap(start, maybeString, end) {
+  return maybeString ? start + maybeString + (end || '') : '';
+}
+
+function indent(maybeString) {
+  return maybeString && '  ' + maybeString.replace(/\n/g, '\n  ');
+}
+
+function isMultiline(string) {
+  return string.indexOf('\n') !== -1;
+}
+
+function hasMultilineItems(maybeArray) {
+  return maybeArray && maybeArray.some(isMultiline);
+}
+},{"./visitor":"../node_modules/graphql/language/visitor.js","./blockString":"../node_modules/graphql/language/blockString.js"}],"../node_modules/apollo-link-http-common/lib/bundle.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.throwServerError = exports.serializeFetchParameter = exports.selectURI = exports.selectHttpOptionsAndBody = exports.parseAndCheckHttpResponse = exports.fallbackHttpConfig = exports.createSignalIfSupported = exports.checkFetcher = void 0;
+
+var _tslib = require("tslib");
+
+var _printer = require("graphql/language/printer");
+
+var _tsInvariant = require("ts-invariant");
+
+var defaultHttpOptions = {
+  includeQuery: true,
+  includeExtensions: false
+};
+var defaultHeaders = {
+  accept: '*/*',
+  'content-type': 'application/json'
+};
+var defaultOptions = {
+  method: 'POST'
+};
+var fallbackHttpConfig = {
+  http: defaultHttpOptions,
+  headers: defaultHeaders,
+  options: defaultOptions
+};
+exports.fallbackHttpConfig = fallbackHttpConfig;
+
+var throwServerError = function (response, result, message) {
+  var error = new Error(message);
+  error.name = 'ServerError';
+  error.response = response;
+  error.statusCode = response.status;
+  error.result = result;
+  throw error;
+};
+
+exports.throwServerError = throwServerError;
+
+var parseAndCheckHttpResponse = function (operations) {
+  return function (response) {
+    return response.text().then(function (bodyText) {
+      try {
+        return JSON.parse(bodyText);
+      } catch (err) {
+        var parseError = err;
+        parseError.name = 'ServerParseError';
+        parseError.response = response;
+        parseError.statusCode = response.status;
+        parseError.bodyText = bodyText;
+        return Promise.reject(parseError);
+      }
+    }).then(function (result) {
+      if (response.status >= 300) {
+        throwServerError(response, result, "Response not successful: Received status code " + response.status);
+      }
+
+      if (!Array.isArray(result) && !result.hasOwnProperty('data') && !result.hasOwnProperty('errors')) {
+        throwServerError(response, result, "Server response was missing for query '" + (Array.isArray(operations) ? operations.map(function (op) {
+          return op.operationName;
+        }) : operations.operationName) + "'.");
+      }
+
+      return result;
+    });
+  };
+};
+
+exports.parseAndCheckHttpResponse = parseAndCheckHttpResponse;
+
+var checkFetcher = function (fetcher) {
+  if (!fetcher && typeof fetch === 'undefined') {
+    var library = 'unfetch';
+    if (typeof window === 'undefined') library = 'node-fetch';
+    throw "development" === "production" ? new _tsInvariant.InvariantError(1) : new _tsInvariant.InvariantError("\nfetch is not found globally and no fetcher passed, to fix pass a fetch for\nyour environment like https://www.npmjs.com/package/" + library + ".\n\nFor example:\nimport fetch from '" + library + "';\nimport { createHttpLink } from 'apollo-link-http';\n\nconst link = createHttpLink({ uri: '/graphql', fetch: fetch });");
+  }
+};
+
+exports.checkFetcher = checkFetcher;
+
+var createSignalIfSupported = function () {
+  if (typeof AbortController === 'undefined') return {
+    controller: false,
+    signal: false
+  };
+  var controller = new AbortController();
+  var signal = controller.signal;
+  return {
+    controller: controller,
+    signal: signal
+  };
+};
+
+exports.createSignalIfSupported = createSignalIfSupported;
+
+var selectHttpOptionsAndBody = function (operation, fallbackConfig) {
+  var configs = [];
+
+  for (var _i = 2; _i < arguments.length; _i++) {
+    configs[_i - 2] = arguments[_i];
+  }
+
+  var options = (0, _tslib.__assign)({}, fallbackConfig.options, {
+    headers: fallbackConfig.headers,
+    credentials: fallbackConfig.credentials
+  });
+  var http = fallbackConfig.http;
+  configs.forEach(function (config) {
+    options = (0, _tslib.__assign)({}, options, config.options, {
+      headers: (0, _tslib.__assign)({}, options.headers, config.headers)
+    });
+    if (config.credentials) options.credentials = config.credentials;
+    http = (0, _tslib.__assign)({}, http, config.http);
+  });
+  var operationName = operation.operationName,
+      extensions = operation.extensions,
+      variables = operation.variables,
+      query = operation.query;
+  var body = {
+    operationName: operationName,
+    variables: variables
+  };
+  if (http.includeExtensions) body.extensions = extensions;
+  if (http.includeQuery) body.query = (0, _printer.print)(query);
+  return {
+    options: options,
+    body: body
+  };
+};
+
+exports.selectHttpOptionsAndBody = selectHttpOptionsAndBody;
+
+var serializeFetchParameter = function (p, label) {
+  var serialized;
+
+  try {
+    serialized = JSON.stringify(p);
+  } catch (e) {
+    var parseError = "development" === "production" ? new _tsInvariant.InvariantError(2) : new _tsInvariant.InvariantError("Network request failed. " + label + " is not serializable: " + e.message);
+    parseError.parseError = e;
+    throw parseError;
+  }
+
+  return serialized;
+};
+
+exports.serializeFetchParameter = serializeFetchParameter;
+
+var selectURI = function (operation, fallbackURI) {
+  var context = operation.getContext();
+  var contextURI = context.uri;
+
+  if (contextURI) {
+    return contextURI;
+  } else if (typeof fallbackURI === 'function') {
+    return fallbackURI(operation);
+  } else {
+    return fallbackURI || '/graphql';
+  }
+};
+
+exports.selectURI = selectURI;
+},{"tslib":"../node_modules/tslib/tslib.es6.js","graphql/language/printer":"../node_modules/graphql/language/printer.js","ts-invariant":"../node_modules/ts-invariant/lib/invariant.esm.js"}],"../node_modules/apollo-link-http/lib/bundle.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createHttpLink = exports.HttpLink = void 0;
+
+var _tslib = require("tslib");
+
+var _apolloLink = require("apollo-link");
+
+var _apolloLinkHttpCommon = require("apollo-link-http-common");
+
+var createHttpLink = function (linkOptions) {
+  if (linkOptions === void 0) {
+    linkOptions = {};
+  }
+
+  var _a = linkOptions.uri,
+      uri = _a === void 0 ? '/graphql' : _a,
+      fetcher = linkOptions.fetch,
+      includeExtensions = linkOptions.includeExtensions,
+      useGETForQueries = linkOptions.useGETForQueries,
+      requestOptions = (0, _tslib.__rest)(linkOptions, ["uri", "fetch", "includeExtensions", "useGETForQueries"]);
+  (0, _apolloLinkHttpCommon.checkFetcher)(fetcher);
+
+  if (!fetcher) {
+    fetcher = fetch;
+  }
+
+  var linkConfig = {
+    http: {
+      includeExtensions: includeExtensions
+    },
+    options: requestOptions.fetchOptions,
+    credentials: requestOptions.credentials,
+    headers: requestOptions.headers
+  };
+  return new _apolloLink.ApolloLink(function (operation) {
+    var chosenURI = (0, _apolloLinkHttpCommon.selectURI)(operation, uri);
+    var context = operation.getContext();
+    var clientAwarenessHeaders = {};
+
+    if (context.clientAwareness) {
+      var _a = context.clientAwareness,
+          name_1 = _a.name,
+          version = _a.version;
+
+      if (name_1) {
+        clientAwarenessHeaders['apollographql-client-name'] = name_1;
+      }
+
+      if (version) {
+        clientAwarenessHeaders['apollographql-client-version'] = version;
+      }
+    }
+
+    var contextHeaders = (0, _tslib.__assign)({}, clientAwarenessHeaders, context.headers);
+    var contextConfig = {
+      http: context.http,
+      options: context.fetchOptions,
+      credentials: context.credentials,
+      headers: contextHeaders
+    };
+
+    var _b = (0, _apolloLinkHttpCommon.selectHttpOptionsAndBody)(operation, _apolloLinkHttpCommon.fallbackHttpConfig, linkConfig, contextConfig),
+        options = _b.options,
+        body = _b.body;
+
+    var controller;
+
+    if (!options.signal) {
+      var _c = (0, _apolloLinkHttpCommon.createSignalIfSupported)(),
+          _controller = _c.controller,
+          signal = _c.signal;
+
+      controller = _controller;
+      if (controller) options.signal = signal;
+    }
+
+    var definitionIsMutation = function (d) {
+      return d.kind === 'OperationDefinition' && d.operation === 'mutation';
+    };
+
+    if (useGETForQueries && !operation.query.definitions.some(definitionIsMutation)) {
+      options.method = 'GET';
+    }
+
+    if (options.method === 'GET') {
+      var _d = rewriteURIForGET(chosenURI, body),
+          newURI = _d.newURI,
+          parseError = _d.parseError;
+
+      if (parseError) {
+        return (0, _apolloLink.fromError)(parseError);
+      }
+
+      chosenURI = newURI;
+    } else {
+      try {
+        options.body = (0, _apolloLinkHttpCommon.serializeFetchParameter)(body, 'Payload');
+      } catch (parseError) {
+        return (0, _apolloLink.fromError)(parseError);
+      }
+    }
+
+    return new _apolloLink.Observable(function (observer) {
+      fetcher(chosenURI, options).then(function (response) {
+        operation.setContext({
+          response: response
+        });
+        return response;
+      }).then((0, _apolloLinkHttpCommon.parseAndCheckHttpResponse)(operation)).then(function (result) {
+        observer.next(result);
+        observer.complete();
+        return result;
+      }).catch(function (err) {
+        if (err.name === 'AbortError') return;
+
+        if (err.result && err.result.errors && err.result.data) {
+          observer.next(err.result);
+        }
+
+        observer.error(err);
+      });
+      return function () {
+        if (controller) controller.abort();
+      };
+    });
+  });
+};
+
+exports.createHttpLink = createHttpLink;
+
+function rewriteURIForGET(chosenURI, body) {
+  var queryParams = [];
+
+  var addQueryParam = function (key, value) {
+    queryParams.push(key + "=" + encodeURIComponent(value));
+  };
+
+  if ('query' in body) {
+    addQueryParam('query', body.query);
+  }
+
+  if (body.operationName) {
+    addQueryParam('operationName', body.operationName);
+  }
+
+  if (body.variables) {
+    var serializedVariables = void 0;
+
+    try {
+      serializedVariables = (0, _apolloLinkHttpCommon.serializeFetchParameter)(body.variables, 'Variables map');
+    } catch (parseError) {
+      return {
+        parseError: parseError
+      };
+    }
+
+    addQueryParam('variables', serializedVariables);
+  }
+
+  if (body.extensions) {
+    var serializedExtensions = void 0;
+
+    try {
+      serializedExtensions = (0, _apolloLinkHttpCommon.serializeFetchParameter)(body.extensions, 'Extensions map');
+    } catch (parseError) {
+      return {
+        parseError: parseError
+      };
+    }
+
+    addQueryParam('extensions', serializedExtensions);
+  }
+
+  var fragment = '',
+      preFragment = chosenURI;
+  var fragmentStart = chosenURI.indexOf('#');
+
+  if (fragmentStart !== -1) {
+    fragment = chosenURI.substr(fragmentStart);
+    preFragment = chosenURI.substr(0, fragmentStart);
+  }
+
+  var queryParamsPrefix = preFragment.indexOf('?') === -1 ? '?' : '&';
+  var newURI = preFragment + queryParamsPrefix + queryParams.join('&') + fragment;
+  return {
+    newURI: newURI
+  };
+}
+
+var HttpLink = function (_super) {
+  (0, _tslib.__extends)(HttpLink, _super);
+
+  function HttpLink(opts) {
+    return _super.call(this, createHttpLink(opts).request) || this;
+  }
+
+  return HttpLink;
+}(_apolloLink.ApolloLink);
+
+exports.HttpLink = HttpLink;
+},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js","apollo-link-http-common":"../node_modules/apollo-link-http-common/lib/bundle.esm.js"}],"../node_modules/graphql/jsutils/devAssert.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -44245,113 +47349,7 @@ var Source = function Source(body, name, locationOffset) {
 
 exports.Source = Source;
 (0, _defineToStringTag.default)(Source);
-},{"../jsutils/devAssert":"../node_modules/graphql/jsutils/devAssert.js","../jsutils/defineToStringTag":"../node_modules/graphql/jsutils/defineToStringTag.js"}],"../node_modules/graphql/language/blockString.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.dedentBlockStringValue = dedentBlockStringValue;
-exports.getBlockStringIndentation = getBlockStringIndentation;
-exports.printBlockString = printBlockString;
-/**
- * Produces the value of a block string from its parsed raw value, similar to
- * CoffeeScript's block string, Python's docstring trim or Ruby's strip_heredoc.
- *
- * This implements the GraphQL spec's BlockStringValue() static algorithm.
- */
-
-function dedentBlockStringValue(rawString) {
-  // Expand a block string's raw value into independent lines.
-  var lines = rawString.split(/\r\n|[\n\r]/g); // Remove common indentation from all lines but first.
-
-  var commonIndent = getBlockStringIndentation(lines);
-
-  if (commonIndent !== 0) {
-    for (var i = 1; i < lines.length; i++) {
-      lines[i] = lines[i].slice(commonIndent);
-    }
-  } // Remove leading and trailing blank lines.
-
-
-  while (lines.length > 0 && isBlank(lines[0])) {
-    lines.shift();
-  }
-
-  while (lines.length > 0 && isBlank(lines[lines.length - 1])) {
-    lines.pop();
-  } // Return a string of the lines joined with U+000A.
-
-
-  return lines.join('\n');
-} // @internal
-
-
-function getBlockStringIndentation(lines) {
-  var commonIndent = null;
-
-  for (var i = 1; i < lines.length; i++) {
-    var line = lines[i];
-    var indent = leadingWhitespace(line);
-
-    if (indent === line.length) {
-      continue; // skip empty lines
-    }
-
-    if (commonIndent === null || indent < commonIndent) {
-      commonIndent = indent;
-
-      if (commonIndent === 0) {
-        break;
-      }
-    }
-  }
-
-  return commonIndent === null ? 0 : commonIndent;
-}
-
-function leadingWhitespace(str) {
-  var i = 0;
-
-  while (i < str.length && (str[i] === ' ' || str[i] === '\t')) {
-    i++;
-  }
-
-  return i;
-}
-
-function isBlank(str) {
-  return leadingWhitespace(str) === str.length;
-}
-/**
- * Print a block string in the indented block form by adding a leading and
- * trailing blank line. However, if a block string starts with whitespace and is
- * a single-line, adding a leading blank line would strip that whitespace.
- */
-
-
-function printBlockString(value) {
-  var indentation = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
-  var preferMultipleLines = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
-  var isSingleLine = value.indexOf('\n') === -1;
-  var hasLeadingSpace = value[0] === ' ' || value[0] === '\t';
-  var hasTrailingQuote = value[value.length - 1] === '"';
-  var printAsMultipleLines = !isSingleLine || hasTrailingQuote || preferMultipleLines;
-  var result = ''; // Format a multi-line block quote to account for leading space.
-
-  if (printAsMultipleLines && !(isSingleLine && hasLeadingSpace)) {
-    result += '\n' + indentation;
-  }
-
-  result += indentation ? value.replace(/\n/g, '\n' + indentation) : value;
-
-  if (printAsMultipleLines) {
-    result += '\n';
-  }
-
-  return '"""' + result.replace(/"""/g, '\\"""') + '"""';
-}
-},{}],"../node_modules/graphql/language/tokenKind.js":[function(require,module,exports) {
+},{"../jsutils/devAssert":"../node_modules/graphql/jsutils/devAssert.js","../jsutils/defineToStringTag":"../node_modules/graphql/jsutils/defineToStringTag.js"}],"../node_modules/graphql/language/tokenKind.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46801,7 +49799,78 @@ gql.disableExperimentalFragmentVariables = disableExperimentalFragmentVariables;
 
 module.exports = gql;
 
-},{"graphql/language/parser":"../node_modules/graphql/language/parser.js"}],"src/components/PetBox.js":[function(require,module,exports) {
+},{"graphql/language/parser":"../node_modules/graphql/language/parser.js"}],"src/client.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _apolloClient = require("apollo-client");
+
+var _apolloCacheInmemory = require("apollo-cache-inmemory");
+
+var _apolloLinkHttp = require("apollo-link-http");
+
+var _graphqlTag = _interopRequireDefault(require("graphql-tag"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Create a new apollo client and export as default
+ */
+const link = new _apolloLinkHttp.HttpLink({
+  uri: 'https://rickandmortyapi.com/graphql'
+});
+const cache = new _apolloCacheInmemory.InMemoryCache();
+const client = new _apolloClient.ApolloClient({
+  link,
+  cache
+});
+const query = _graphqlTag.default`
+  {
+    characters {
+      results {
+        id
+        name
+      }
+    }
+  }
+`;
+client.query({
+  query
+}).then(result => console.log(result));
+var _default = client;
+exports.default = _default;
+},{"apollo-client":"../node_modules/apollo-client/bundle.esm.js","apollo-cache-inmemory":"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js","apollo-link-http":"../node_modules/apollo-link-http/lib/bundle.esm.js","graphql-tag":"../node_modules/graphql-tag/src/index.js"}],"src/components/Header.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactRouterDom = require("react-router-dom");
+
+var _reactRouter = require("react-router");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const Header = () => _react.default.createElement("header", null, _react.default.createElement("div", {
+  className: "row"
+}, _react.default.createElement("div", {
+  className: "col-xs"
+}, _react.default.createElement(_reactRouterDom.Link, {
+  to: "/"
+}, "Home"))));
+
+var _default = (0, _reactRouter.withRouter)(Header);
+
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","react-router":"../node_modules/react-router/esm/react-router.js"}],"src/components/PetBox.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -54552,6 +57621,8 @@ var _reactRouterDom = require("react-router-dom");
 
 var _reactHooks = require("@apollo/react-hooks");
 
+var _client = _interopRequireDefault(require("./client"));
+
 var _App = _interopRequireDefault(require("./components/App"));
 
 require("./index.css");
@@ -54565,7 +57636,7 @@ _reactDom.default.render(_react.default.createElement(Root, null), document.getE
 if (module.hot) {
   module.hot.accept();
 }
-},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","@apollo/react-hooks":"../node_modules/@apollo/react-hooks/lib/react-hooks.esm.js","./components/App":"src/components/App.js","./index.css":"src/index.css"}],"../node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","react-dom":"../node_modules/react-dom/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","@apollo/react-hooks":"../node_modules/@apollo/react-hooks/lib/react-hooks.esm.js","./client":"src/client.js","./components/App":"src/components/App.js","./index.css":"src/index.css"}],"../node_modules/parcel/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
