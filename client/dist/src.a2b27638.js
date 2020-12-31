@@ -57473,10 +57473,13 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-const query = _graphqlTag.default`
-  query Name {
-    whatever {
-      field
+const ALL_PETS = _graphqlTag.default`
+  query AllPets {
+    pets {
+      id
+      name
+      type
+      img
     }
   }
 `;
@@ -57484,15 +57487,23 @@ const query = _graphqlTag.default`
 function Pets() {
   const [modal, setModal] = (0, _react.useState)(false); // NOTE: `useQuery` takes in an argument, which is a GraphQL query:
 
-  const [{
+  const {
     data,
     loading,
     error
-  }] = (0, _reactHooks.useQuery)(query);
+  } = (0, _reactHooks.useQuery)(ALL_PETS);
 
   const onSubmit = input => {
     setModal(false);
   };
+
+  if (loading) {
+    return _react.default.createElement(_Loader.default, null);
+  }
+
+  if (error) {
+    return _react.default.createElement("p", null, "Error!");
+  }
 
   if (modal) {
     return _react.default.createElement(_NewPetModal.default, {
@@ -57512,7 +57523,7 @@ function Pets() {
   }, _react.default.createElement("button", {
     onClick: () => setModal(true)
   }, "new pet")))), _react.default.createElement("section", null, _react.default.createElement(_PetsList.default, {
-    pets: pets
+    pets: data.pets
   })));
 }
 },{"react":"../node_modules/react/index.js","graphql-tag":"../node_modules/graphql-tag/src/index.js","@apollo/react-hooks":"../node_modules/@apollo/react-hooks/lib/react-hooks.esm.js","../components/PetsList":"src/components/PetsList.js","../components/NewPetModal":"src/components/NewPetModal.js","../components/Loader":"src/components/Loader.js"}],"src/components/App.js":[function(require,module,exports) {
