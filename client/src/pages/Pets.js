@@ -33,7 +33,16 @@ export default function Pets() {
   const { data, loading, error } = useQuery(ALL_PETS);
   // NOTE: `useMutation` returns an Array - it does NOT run a mutation, we have to call the function (in this case `createPet`) to trigger a mutation:
   // NOTE: the second object in the left-hand-side array is an Object with `data`, `loading` and `error` (like in the case of `useQuery` above)
-  const [createPet, newPet] = useMutation(NEW_PET);
+  const [createPet, newPet] = useMutation(NEW_PET, {
+    // NOTE: there are multiple ways of making sure our queries get updated after a mutation, one way is to manually update the cache (very much like writing a reducer in Redux!):
+    update(cache, { data: { addPet } }) {
+      const data = cache.readQuery({ query: ALL_PETS });
+      cache.writeQuery({
+        query: ALL_PETS,
+        data: { pets: [addPet, ...data.pets] },
+      });
+    },
+  });
 
   const onSubmit = (input) => {
     setModal(false);
