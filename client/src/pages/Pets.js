@@ -16,25 +16,39 @@ const ALL_PETS = gql`
   }
 `;
 
+const NEW_PET = gql`
+  mutation CreateAPet($newPet: NewPetInput!) {
+    addPet(input: $newPet) {
+      id
+      name
+      type
+      img
+    }
+  }
+`;
+
 export default function Pets() {
   const [modal, setModal] = useState(false);
   // NOTE: `useQuery` takes in an argument, which is a GraphQL query - it returns an Object:
   const { data, loading, error } = useQuery(ALL_PETS);
   // NOTE: `useMutation` returns an Array - it does NOT run a mutation, we have to call the function (in this case `createPet`) to trigger a mutation:
   // NOTE: the second object in the left-hand-side array is an Object with `data`, `loading` and `error` (like in the case of `useQuery` above)
-  const [createPet, newPet] = useMutation(...mutation);
+  const [createPet, newPet] = useMutation(NEW_PET);
 
   const onSubmit = (input) => {
     setModal(false);
-    // NOTE: we pass our Query Variables to this function to use and actually trigger a mutation:
-    createPet({});
+    createPet({
+      // NOTE: we pass our Query Variables to this function to use and actually trigger a mutation - `newPet` here corresponds to `$newPet`:
+      // NOTE: here `input` has been configured in the right format (it is something like: {"name": "batman", "type": "DOG"})
+      variables: { newPet: input },
+    });
   };
 
-  if (loading) {
+  if (loading || newPet.loading) {
     return <Loader />;
   }
 
-  if (error) {
+  if (error || newPet.error) {
     return <p>Error!</p>;
   }
 
