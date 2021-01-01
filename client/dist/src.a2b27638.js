@@ -57485,16 +57485,21 @@ const ALL_PETS = _graphqlTag.default`
 `;
 
 function Pets() {
-  const [modal, setModal] = (0, _react.useState)(false); // NOTE: `useQuery` takes in an argument, which is a GraphQL query:
+  const [modal, setModal] = (0, _react.useState)(false); // NOTE: `useQuery` takes in an argument, which is a GraphQL query - it returns an Object:
 
   const {
     data,
     loading,
     error
-  } = (0, _reactHooks.useQuery)(ALL_PETS);
+  } = (0, _reactHooks.useQuery)(ALL_PETS); // NOTE: `useMutation` returns an Array - it does NOT run a mutation, we have to call the function (in this case `createPet`) to trigger a mutation:
+  // NOTE: the second object in the left-hand-side array is an Object with `data`, `loading` and `error` (like in the case of `useQuery` above)
+
+  const [createPet, newPet] = (0, _reactHooks.useMutation)(...mutation);
 
   const onSubmit = input => {
-    setModal(false);
+    setModal(false); // NOTE: we pass our Query Variables to this function to use and actually trigger a mutation:
+
+    createPet({});
   };
 
   if (loading) {
