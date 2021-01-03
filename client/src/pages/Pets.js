@@ -5,6 +5,9 @@ import PetsList from '../components/PetsList';
 import NewPetModal from '../components/NewPetModal';
 import Loader from '../components/Loader';
 
+// A Query:
+// NOTE: the `@client` directive specifies that this piece of information is coming from client side only (NOT server side!)
+// this is how we can use Apollo for our state management(instead of Redux, etc.):
 const ALL_PETS = gql`
   query AllPets {
     pets {
@@ -12,10 +15,15 @@ const ALL_PETS = gql`
       name
       type
       img
+      owner {
+        id
+        age @client
+      }
     }
   }
 `;
 
+// A Mutation:
 const NEW_PET = gql`
   mutation CreateAPet($newPet: NewPetInput!) {
     addPet(input: $newPet) {
@@ -23,6 +31,10 @@ const NEW_PET = gql`
       name
       type
       img
+      owner {
+        id
+        age @client
+      }
     }
   }
 `;
@@ -77,6 +89,8 @@ export default function Pets() {
   if (error || newPet.error) {
     return <p>Error!</p>;
   }
+
+  console.log(data.pets[0]);
 
   if (modal) {
     return <NewPetModal onSubmit={onSubmit} onCancel={() => setModal(false)} />;

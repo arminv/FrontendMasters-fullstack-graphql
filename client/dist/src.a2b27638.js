@@ -46855,88 +46855,7 @@ function setContext(setter) {
     });
   });
 }
-},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js"}],"src/client.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _apolloClient = require("apollo-client");
-
-var _apolloCacheInmemory = require("apollo-cache-inmemory");
-
-var _apolloLinkHttp = require("apollo-link-http");
-
-var _apolloLinkContext = require("apollo-link-context");
-
-var _apolloLink = require("apollo-link");
-
-// import gql from 'graphql-tag';
-
-/**
- * Create a new apollo client and export as default
- */
-// const http = new HttpLink({ uri: 'https://rickandmortyapi.com/graphql' });
-const http = new _apolloLinkHttp.HttpLink({
-  uri: 'http://localhost:4000/'
-}); // NOTE: we create a simulated async action so we can experiment with the Optimistic UI features provided by Apollo:
-
-const delay = (0, _apolloLinkContext.setContext)(request => new Promise((success, fail) => {
-  setTimeout(() => {
-    success();
-  }, 800);
-}));
-
-const link = _apolloLink.ApolloLink.from([delay, http]);
-
-const cache = new _apolloCacheInmemory.InMemoryCache();
-const client = new _apolloClient.ApolloClient({
-  link,
-  cache
-}); // const query = gql`
-//   {
-//     characters {
-//       results {
-//         id
-//         name
-//       }
-//     }
-//   }
-// `;
-// client.query({ query }).then((result) => console.log(result));
-
-var _default = client;
-exports.default = _default;
-},{"apollo-client":"../node_modules/apollo-client/bundle.esm.js","apollo-cache-inmemory":"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js","apollo-link-http":"../node_modules/apollo-link-http/lib/bundle.esm.js","apollo-link-context":"../node_modules/apollo-link-context/lib/bundle.esm.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js"}],"src/components/Header.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _react = _interopRequireDefault(require("react"));
-
-var _reactRouterDom = require("react-router-dom");
-
-var _reactRouter = require("react-router");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-const Header = () => _react.default.createElement("header", null, _react.default.createElement("div", {
-  className: "row"
-}, _react.default.createElement("div", {
-  className: "col-xs"
-}, _react.default.createElement(_reactRouterDom.Link, {
-  to: "/"
-}, "Home"))));
-
-var _default = (0, _reactRouter.withRouter)(Header);
-
-exports.default = _default;
-},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","react-router":"../node_modules/react-router/esm/react-router.js"}],"../node_modules/graphql/jsutils/devAssert.js":[function(require,module,exports) {
+},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js"}],"../node_modules/graphql/jsutils/devAssert.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -49912,7 +49831,107 @@ gql.disableExperimentalFragmentVariables = disableExperimentalFragmentVariables;
 
 module.exports = gql;
 
-},{"graphql/language/parser":"../node_modules/graphql/language/parser.js"}],"src/components/PetBox.js":[function(require,module,exports) {
+},{"graphql/language/parser":"../node_modules/graphql/language/parser.js"}],"src/client.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _apolloClient = require("apollo-client");
+
+var _apolloCacheInmemory = require("apollo-cache-inmemory");
+
+var _apolloLinkHttp = require("apollo-link-http");
+
+var _apolloLinkContext = require("apollo-link-context");
+
+var _apolloLink = require("apollo-link");
+
+var _graphqlTag = _interopRequireDefault(require("graphql-tag"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Create a new apollo client and export as default
+ */
+// NOTE: we use a schema definition language, which is slightly different from the query language:
+// NOTE: `age` here does NOT get sent to the server, it is only a frontend piece of state! Apollo is acting as a state manager here (like Redux, Mobx, etc.):
+const typeDefs = _graphqlTag.default`
+  extend type User{
+    age: Int
+  }
+`;
+const resolvers = {
+  User: {
+    age() {
+      return 35;
+    }
+
+  }
+}; // const http = new HttpLink({ uri: 'https://rickandmortyapi.com/graphql' });
+
+const http = new _apolloLinkHttp.HttpLink({
+  uri: 'http://localhost:4000/'
+}); // NOTE: we create a simulated async action so we can experiment with the Optimistic UI features provided by Apollo:
+
+const delay = (0, _apolloLinkContext.setContext)(request => new Promise((success, fail) => {
+  setTimeout(() => {
+    success();
+  }, 800);
+}));
+
+const link = _apolloLink.ApolloLink.from([delay, http]);
+
+const cache = new _apolloCacheInmemory.InMemoryCache();
+const client = new _apolloClient.ApolloClient({
+  link,
+  cache,
+  resolvers,
+  typeDefs
+}); // const query = gql`
+//   {
+//     characters {
+//       results {
+//         id
+//         name
+//       }
+//     }
+//   }
+// `;
+// client.query({ query }).then((result) => console.log(result));
+
+var _default = client;
+exports.default = _default;
+},{"apollo-client":"../node_modules/apollo-client/bundle.esm.js","apollo-cache-inmemory":"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js","apollo-link-http":"../node_modules/apollo-link-http/lib/bundle.esm.js","apollo-link-context":"../node_modules/apollo-link-context/lib/bundle.esm.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js","graphql-tag":"../node_modules/graphql-tag/src/index.js"}],"src/components/Header.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactRouterDom = require("react-router-dom");
+
+var _reactRouter = require("react-router");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const Header = () => _react.default.createElement("header", null, _react.default.createElement("div", {
+  className: "row"
+}, _react.default.createElement("div", {
+  className: "col-xs"
+}, _react.default.createElement(_reactRouterDom.Link, {
+  to: "/"
+}, "Home"))));
+
+var _default = (0, _reactRouter.withRouter)(Header);
+
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/esm/react-router-dom.js","react-router":"../node_modules/react-router/esm/react-router.js"}],"src/components/PetBox.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -57518,6 +57537,9 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
+// A Query:
+// NOTE: the `@client` directive specifies that this piece of information is coming from client side only (NOT server side!)
+// this is how we can use Apollo for our state management(instead of Redux, etc.):
 const ALL_PETS = _graphqlTag.default`
   query AllPets {
     pets {
@@ -57525,9 +57547,14 @@ const ALL_PETS = _graphqlTag.default`
       name
       type
       img
+      owner {
+        id
+        age @client
+      }
     }
   }
-`;
+`; // A Mutation:
+
 const NEW_PET = _graphqlTag.default`
   mutation CreateAPet($newPet: NewPetInput!) {
     addPet(input: $newPet) {
@@ -57535,6 +57562,10 @@ const NEW_PET = _graphqlTag.default`
       name
       type
       img
+      owner {
+        id
+        age @client
+      }
     }
   }
 `;
@@ -57604,6 +57635,8 @@ function Pets() {
   if (error || newPet.error) {
     return _react.default.createElement("p", null, "Error!");
   }
+
+  console.log(data.pets[0]);
 
   if (modal) {
     return _react.default.createElement(_NewPetModal.default, {
@@ -57790,7 +57823,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63150" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49746" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
