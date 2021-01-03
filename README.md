@@ -1,4 +1,5 @@
-# Fullstack GraphQL
+# [Fullstack GraphQL](https://frontendmasters.com/courses/client-graphql-react)
+
 > Learn how to use GraphQL with Node and React
 
 This course comes with some [slides](https://docs.google.com/presentation/d/1IrGA4PtUEZPVDTBg5_WCMmUapElbFBgLwfSBAp8ft1g/edit?usp=sharing)

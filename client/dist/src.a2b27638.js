@@ -49859,14 +49859,23 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // NOTE: we use a schema definition language, which is slightly different from the query language:
 // NOTE: `age` here does NOT get sent to the server, it is only a frontend piece of state! Apollo is acting as a state manager here (like Redux, Mobx, etc.):
 const typeDefs = _graphqlTag.default`
-  extend type User{
+  extend type User {
     age: Int
+  }
+  extend type User {
+    vaccinated: Boolean!
   }
 `;
 const resolvers = {
   User: {
     age() {
       return 35;
+    }
+
+  },
+  Pet: {
+    vaccinated() {
+      return true;
     }
 
   }
@@ -57537,37 +57546,41 @@ function _getRequireWildcardCache() { if (typeof WeakMap !== "function") return 
 
 function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } var cache = _getRequireWildcardCache(); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; if (obj != null) { var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
-// A Query:
+// A Fragment:
+// NOTE: we need to call `on` to specify the Type (e.g. here both our query and mutation return a `Pet` type):
+// NOTE: how we need to add the fragment to the bottom of the gql tag and then spreading it using the fragment name (NOT the query/mutation object):
+const PETS_FIELDS = _graphqlTag.default`
+  fragment PetsFields on Pet {
+    id
+    name
+    type
+    img
+    vaccinated @client
+    owner {
+      id
+      age @client
+    }
+  }
+`; // A Query:
 // NOTE: the `@client` directive specifies that this piece of information is coming from client side only (NOT server side!)
 // this is how we can use Apollo for our state management(instead of Redux, etc.):
+
 const ALL_PETS = _graphqlTag.default`
   query AllPets {
     pets {
-      id
-      name
-      type
-      img
-      owner {
-        id
-        age @client
-      }
+      ...PetsFields
     }
   }
+  ${PETS_FIELDS}
 `; // A Mutation:
 
 const NEW_PET = _graphqlTag.default`
   mutation CreateAPet($newPet: NewPetInput!) {
     addPet(input: $newPet) {
-      id
-      name
-      type
-      img
-      owner {
-        id
-        age @client
-      }
+      ...PetsFields
     }
   }
+  ${PETS_FIELDS}
 `;
 
 function Pets() {
@@ -57625,7 +57638,8 @@ function Pets() {
         }
       }
     });
-  }; // if (loading || newPet.loading) {
+  }; // NOTE: this line is commented out as we are now using Optimistic UI and would not want to show the loading circle anymore!
+  // if (loading || newPet.loading) {
 
 
   if (loading) {
@@ -57823,7 +57837,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49746" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51866" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -11,8 +11,11 @@ import gql from 'graphql-tag';
 // NOTE: we use a schema definition language, which is slightly different from the query language:
 // NOTE: `age` here does NOT get sent to the server, it is only a frontend piece of state! Apollo is acting as a state manager here (like Redux, Mobx, etc.):
 const typeDefs = gql`
-  extend type User{
+  extend type User {
     age: Int
+  }
+  extend type User {
+    vaccinated: Boolean!
   }
 `;
 
@@ -20,6 +23,11 @@ const resolvers = {
   User: {
     age() {
       return 35;
+    },
+  },
+  Pet: {
+    vaccinated() {
+      return true;
     },
   },
 };

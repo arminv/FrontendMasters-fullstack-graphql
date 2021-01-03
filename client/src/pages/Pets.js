@@ -5,38 +5,43 @@ import PetsList from '../components/PetsList';
 import NewPetModal from '../components/NewPetModal';
 import Loader from '../components/Loader';
 
+// A Fragment:
+// NOTE: we need to call `on` to specify the Type (e.g. here both our query and mutation return a `Pet` type):
+// NOTE: how we need to add the fragment to the bottom of the gql tag and then spreading it using the fragment name (NOT the query/mutation object):
+const PETS_FIELDS = gql`
+  fragment PetsFields on Pet {
+    id
+    name
+    type
+    img
+    vaccinated @client
+    owner {
+      id
+      age @client
+    }
+  }
+`;
+
 // A Query:
 // NOTE: the `@client` directive specifies that this piece of information is coming from client side only (NOT server side!)
 // this is how we can use Apollo for our state management(instead of Redux, etc.):
 const ALL_PETS = gql`
   query AllPets {
     pets {
-      id
-      name
-      type
-      img
-      owner {
-        id
-        age @client
-      }
+      ...PetsFields
     }
   }
+  ${PETS_FIELDS}
 `;
 
 // A Mutation:
 const NEW_PET = gql`
   mutation CreateAPet($newPet: NewPetInput!) {
     addPet(input: $newPet) {
-      id
-      name
-      type
-      img
-      owner {
-        id
-        age @client
-      }
+      ...PetsFields
     }
   }
+  ${PETS_FIELDS}
 `;
 
 export default function Pets() {
@@ -81,6 +86,7 @@ export default function Pets() {
     });
   };
 
+  // NOTE: this line is commented out as we are now using Optimistic UI and would not want to show the loading circle anymore!
   // if (loading || newPet.loading) {
   if (loading) {
     return <Loader />;
