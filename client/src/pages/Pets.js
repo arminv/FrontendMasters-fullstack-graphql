@@ -53,7 +53,19 @@ export default function Pets() {
       // NOTE: here `input` has been configured in the right format (it is something like: {"name": "batman", "type": "DOG"})
       variables: { newPet: input },
       // NOTE: this is one way we can utilize the optimistic UI provided by Apollo - or we can add it directly inside `useMutation` (see above) - it depends on the use case:
-      // optimisticResponse: {},
+      optimisticResponse: {
+        __typename: 'Mutation',
+        addPet: {
+          // NOTE: you can check the GraphQL Schema to get this (in this case `Pet`):
+          __typename: 'Pet',
+          // NOTE: we can't possibly know the id as we are creating, so we just create a random placeholder:
+          id: Math.floor(Math.random() * 10000) + '',
+          // NOTE: unlike `id`, we have access to these via `input` so we just pass them through:
+          name: input.name,
+          type: input.type,
+          img: 'https://via.placeholder.com/300',
+        },
+      },
     });
   };
 

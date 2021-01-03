@@ -46823,7 +46823,39 @@ var HttpLink = function (_super) {
 }(_apolloLink.ApolloLink);
 
 exports.HttpLink = HttpLink;
-},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js","apollo-link-http-common":"../node_modules/apollo-link-http-common/lib/bundle.esm.js"}],"src/client.js":[function(require,module,exports) {
+},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js","apollo-link-http-common":"../node_modules/apollo-link-http-common/lib/bundle.esm.js"}],"../node_modules/apollo-link-context/lib/bundle.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.setContext = setContext;
+
+var _tslib = require("tslib");
+
+var _apolloLink = require("apollo-link");
+
+function setContext(setter) {
+  return new _apolloLink.ApolloLink(function (operation, forward) {
+    var request = (0, _tslib.__rest)(operation, []);
+    return new _apolloLink.Observable(function (observer) {
+      var handle;
+      Promise.resolve(request).then(function (req) {
+        return setter(req, operation.getContext());
+      }).then(operation.setContext).then(function () {
+        handle = forward(operation).subscribe({
+          next: observer.next.bind(observer),
+          error: observer.error.bind(observer),
+          complete: observer.complete.bind(observer)
+        });
+      }).catch(observer.error.bind(observer));
+      return function () {
+        if (handle) handle.unsubscribe();
+      };
+    });
+  });
+}
+},{"tslib":"../node_modules/tslib/tslib.es6.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js"}],"src/client.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -46837,15 +46869,28 @@ var _apolloCacheInmemory = require("apollo-cache-inmemory");
 
 var _apolloLinkHttp = require("apollo-link-http");
 
+var _apolloLinkContext = require("apollo-link-context");
+
+var _apolloLink = require("apollo-link");
+
 // import gql from 'graphql-tag';
 
 /**
  * Create a new apollo client and export as default
  */
-// const link = new HttpLink({ uri: 'https://rickandmortyapi.com/graphql' });
-const link = new _apolloLinkHttp.HttpLink({
+// const http = new HttpLink({ uri: 'https://rickandmortyapi.com/graphql' });
+const http = new _apolloLinkHttp.HttpLink({
   uri: 'http://localhost:4000/'
-});
+}); // NOTE: we create a simulated async action so we can experiment with the Optimistic UI features provided by Apollo:
+
+const delay = (0, _apolloLinkContext.setContext)(request => new Promise((success, fail) => {
+  setTimeout(() => {
+    success();
+  }, 800);
+}));
+
+const link = _apolloLink.ApolloLink.from([delay, http]);
+
 const cache = new _apolloCacheInmemory.InMemoryCache();
 const client = new _apolloClient.ApolloClient({
   link,
@@ -46864,7 +46909,7 @@ const client = new _apolloClient.ApolloClient({
 
 var _default = client;
 exports.default = _default;
-},{"apollo-client":"../node_modules/apollo-client/bundle.esm.js","apollo-cache-inmemory":"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js","apollo-link-http":"../node_modules/apollo-link-http/lib/bundle.esm.js"}],"src/components/Header.js":[function(require,module,exports) {
+},{"apollo-client":"../node_modules/apollo-client/bundle.esm.js","apollo-cache-inmemory":"../node_modules/apollo-cache-inmemory/lib/bundle.esm.js","apollo-link-http":"../node_modules/apollo-link-http/lib/bundle.esm.js","apollo-link-context":"../node_modules/apollo-link-context/lib/bundle.esm.js","apollo-link":"../node_modules/apollo-link/lib/bundle.esm.js"}],"src/components/Header.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -57522,7 +57567,9 @@ function Pets() {
       });
     }
 
-  });
+  } // NOTE: this is one way we can utilize the optimistic UI provided by Apollo - or we can add it to the function that calls a mutation - it depends on the use case:
+  // optimisticResponse: {},
+  );
 
   const onSubmit = input => {
     setModal(false);
@@ -57531,11 +57578,26 @@ function Pets() {
       // NOTE: here `input` has been configured in the right format (it is something like: {"name": "batman", "type": "DOG"})
       variables: {
         newPet: input
+      },
+      // NOTE: this is one way we can utilize the optimistic UI provided by Apollo - or we can add it directly inside `useMutation` (see above) - it depends on the use case:
+      optimisticResponse: {
+        __typename: 'Mutation',
+        addPet: {
+          // NOTE: you can check the GraphQL Schema to get this (in this case `Pet`):
+          __typename: 'Pet',
+          // NOTE: we can't possibly know the id as we are creating, so we just create a random placeholder:
+          id: Math.floor(Math.random() * 10000) + '',
+          // NOTE: unlike `id`, we have access to these via `input` so we just pass them through:
+          name: input.name,
+          type: input.type,
+          img: 'https://via.placeholder.com/300'
+        }
       }
     });
-  };
+  }; // if (loading || newPet.loading) {
 
-  if (loading || newPet.loading) {
+
+  if (loading) {
     return _react.default.createElement(_Loader.default, null);
   }
 
@@ -57728,7 +57790,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64124" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63150" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
