@@ -8,6 +8,7 @@ import Loader from '../components/Loader';
 // A Fragment:
 // NOTE: we need to call `on` to specify the Type (e.g. here both our query and mutation return a `Pet` type):
 // NOTE: how we need to add the fragment to the bottom of the gql tag and then spreading it using the fragment name (NOT the query/mutation object):
+// NOTE: there are other types of directives available such as: `@skip(someVariable)`, `@include(someVariable)`, `@defer`, `@live`,
 const PETS_FIELDS = gql`
   fragment PetsFields on Pet {
     id
