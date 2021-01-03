@@ -42,6 +42,8 @@ export default function Pets() {
         data: { pets: [addPet, ...data.pets] },
       });
     },
+    // NOTE: this is one way we can utilize the optimistic UI provided by Apollo - or we can add it to the function that calls a mutation - it depends on the use case:
+    // optimisticResponse: {},
   });
 
   const onSubmit = (input) => {
@@ -50,10 +52,13 @@ export default function Pets() {
       // NOTE: we pass our Query Variables to this function to use and actually trigger a mutation - `newPet` here corresponds to `$newPet`:
       // NOTE: here `input` has been configured in the right format (it is something like: {"name": "batman", "type": "DOG"})
       variables: { newPet: input },
+      // NOTE: this is one way we can utilize the optimistic UI provided by Apollo - or we can add it directly inside `useMutation` (see above) - it depends on the use case:
+      // optimisticResponse: {},
     });
   };
 
-  if (loading || newPet.loading) {
+  // if (loading || newPet.loading) {
+  if (loading) {
     return <Loader />;
   }
 
